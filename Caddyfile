@@ -1,0 +1,13 @@
+ :80 {
+     handle /term/* {
+         reverse_proxy runclawd:7681
+     }
+ 
+     handle /openclaw/* {
+         reverse_proxy runclawd:7682
+     }
+ 
+     handle {
+         reverse_proxy runclawd:18789
+     }
+ }
