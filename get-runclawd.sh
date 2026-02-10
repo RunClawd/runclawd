@@ -211,21 +211,34 @@ print_result() {
   local tunnel_url="$3"
 
   cat <<EOF
-Onboarding URL:
-${tunnel_url}/openclaw/?arg=onboard
+=====================================================================
+ 🦞 OpenClaw is ready
+=====================================================================
 
-Username: openclaw
-Password: ${web_term_password}
+[1/4] Onboarding
+  ${tunnel_url}/openclaw/?arg=onboard
 
-Gateway Dashboard:
-${tunnel_url}/?token=${access_token}
+[2/4] Web Terminal
+  URL:      ${tunnel_url}/term/
+  Username: openclaw
+  Password: ${web_term_password}
 
-Reminder: after opening the Dashboard, run:
-${tunnel_url}/openclaw/?arg=devices&arg=list
+[3/4] Gateway Dashboard
+  ${tunnel_url}/?token=${access_token}
 
-${tunnel_url}/openclaw/?arg=devices&arg=approve&id={device_id}
+[4/4] Device approval (required)
+  List devices:
+    ${tunnel_url}/openclaw/?arg=devices&arg=list
 
-You must approve the device before you can access it.
+  Approve a device:
+    ${tunnel_url}/openclaw/?arg=devices&arg=approve&arg={device_id}
+
+  Tip: open the "List devices" link, copy the returned device_id, then replace "{device_id}" in the approve link.
+
+Notes:
+  - If the URL is not reachable right away, wait a few minutes for DNS/route propagation and try again.
+  - You must approve the device before you can access it.
+
 EOF
 }
 
