@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>RunClawd — OpenClaw deployment preset</title>
+    <meta name="description" content="RunClawd is a curated Docker Compose preset repository for OpenClaw, providing an opinionated, production-oriented deployment." />
+    <style>
+      :root {
+        --bg: #0b1220;
+        --panel: rgba(255, 255, 255, 0.06);
+        --panel2: rgba(255, 255, 255, 0.08);
+        --text: rgba(255, 255, 255, 0.92);
+        --muted: rgba(255, 255, 255, 0.70);
+        --faint: rgba(255, 255, 255, 0.55);
+        --border: rgba(255, 255, 255, 0.12);
+        --accent: #7c3aed;
+        --accent2: #22c55e;
+        --shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+        --radius: 18px;
+        --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
+          "Segoe UI Emoji";
+      }
+
+      @media (prefers-color-scheme: light) {
+        :root {
+          --bg: #f7f7fb;
+          --panel: rgba(0, 0, 0, 0.04);
+          --panel2: rgba(0, 0, 0, 0.06);
+          --text: rgba(0, 0, 0, 0.88);
+          --muted: rgba(0, 0, 0, 0.65);
+          --faint: rgba(0, 0, 0, 0.50);
+          --border: rgba(0, 0, 0, 0.12);
+          --shadow: 0 18px 60px rgba(0, 0, 0, 0.12);
+        }
+      }
+
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        font-family: var(--sans);
+        color: var(--text);
+        background: radial-gradient(1200px 600px at 15% 10%, rgba(124, 58, 237, 0.24), transparent 60%),
+          radial-gradient(900px 500px at 75% 15%, rgba(34, 197, 94, 0.18), transparent 60%),
+          radial-gradient(1000px 700px at 50% 85%, rgba(56, 189, 248, 0.14), transparent 65%),
+          var(--bg);
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .wrap {
+        max-width: 1060px;
+        margin: 0 auto;
+        padding: 32px 20px 64px;
+      }
+
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .logo {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.95), rgba(34, 197, 94, 0.85));
+        box-shadow: var(--shadow);
+      }
+
+      .brand h1 {
+        font-size: 16px;
+        margin: 0;
+        letter-spacing: 0.2px;
+      }
+
+      .brand .sub {
+        font-size: 12px;
+        margin: 2px 0 0;
+        color: var(--muted);
+      }
+
+      .toplinks {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .chip {
+        padding: 9px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--panel);
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .chip:hover {
+        background: var(--panel2);
+        color: var(--text);
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 18px;
+        margin-top: 26px;
+      }
+
+      @media (max-width: 920px) {
+        .hero {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        border: 1px solid var(--border);
+        background: var(--panel);
+        border-radius: var(--radius);
+        padding: 22px;
+        box-shadow: var(--shadow);
+      }
+
+      .headline {
+        font-size: 44px;
+        line-height: 1.05;
+        margin: 0;
+        letter-spacing: -0.02em;
+      }
+
+      @media (max-width: 520px) {
+        .headline {
+          font-size: 34px;
+        }
+      }
+
+      .lead {
+        margin: 12px 0 0;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.6;
+      }
+
+      .badges {
+        margin-top: 14px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .badge {
+        font-size: 12px;
+        padding: 7px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--faint);
+      }
+
+      @media (prefers-color-scheme: light) {
+        .badge {
+          background: rgba(0, 0, 0, 0.03);
+        }
+      }
+
+      .cta {
+        margin-top: 18px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--panel);
+        color: var(--text);
+        font-size: 14px;
+      }
+
+      .btn:hover {
+        background: var(--panel2);
+      }
+
+      .btn.primary {
+        border-color: rgba(124, 58, 237, 0.42);
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.95), rgba(124, 58, 237, 0.55));
+      }
+
+      .btn.primary:hover {
+        filter: brightness(1.06);
+      }
+
+      .btn.good {
+        border-color: rgba(34, 197, 94, 0.42);
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.95), rgba(34, 197, 94, 0.55));
+      }
+
+      .btn.good:hover {
+        filter: brightness(1.06);
+      }
+
+      .grid {
+        margin-top: 18px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+      }
+
+      @media (max-width: 920px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .feature {
+        padding: 16px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      @media (prefers-color-scheme: light) {
+        .feature {
+          background: rgba(0, 0, 0, 0.03);
+        }
+      }
+
+      .feature h3 {
+        margin: 0;
+        font-size: 14px;
+        letter-spacing: 0.1px;
+      }
+
+      .feature p {
+        margin: 7px 0 0;
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .codecard {
+        padding: 18px;
+      }
+
+      .kicker {
+        font-size: 12px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        margin: 0 0 10px;
+      }
+
+      pre {
+        margin: 0;
+        padding: 14px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.25);
+        overflow: auto;
+        font-family: var(--mono);
+        font-size: 12.5px;
+        line-height: 1.55;
+      }
+
+      @media (prefers-color-scheme: light) {
+        pre {
+          background: rgba(0, 0, 0, 0.05);
+        }
+      }
+
+      .codehead {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .copy {
+        cursor: pointer;
+        user-select: none;
+        font-size: 13px;
+        padding: 9px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--panel);
+        color: var(--muted);
+      }
+
+      .copy:hover {
+        background: var(--panel2);
+        color: var(--text);
+      }
+
+      footer {
+        margin-top: 20px;
+        color: var(--muted);
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .small {
+        color: var(--faint);
+        font-size: 12px;
+        line-height: 1.6;
+      }
+
+      .sep {
+        height: 1px;
+        background: var(--border);
+        margin: 18px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="brand" aria-label="RunClawd">
+          <div class="logo" aria-hidden="true"></div>
+          <div>
+            <h1>RunClawd</h1>
+            <p class="sub">Curated Docker Compose preset for OpenClaw</p>
+          </div>
+        </div>
+        <nav class="toplinks" aria-label="Links">
+          <a class="chip" href="https://github.com/RunClawd/runclawd" rel="noreferrer">GitHub</a>
+          <a class="chip" href="https://get.runclawd.sh" rel="noreferrer">Installer</a>
+        </nav>
+      </header>
+
+      <section class="hero" aria-label="Hero">
+        <div class="card">
+          <p class="kicker">OpenClaw deployment preset</p>
+          <h2 class="headline">Run OpenClaw like you mean it.</h2>
+          <p class="lead">
+            RunClawd is a curated Docker Compose preset repository for OpenClaw. It gives you an opinionated,
+            production-oriented deployment with a one-line installer — so you can spend less time wiring infra and more time
+            building.
+          </p>
+
+          <div class="badges" aria-label="Highlights">
+            <span class="badge">Docker Compose</span>
+            <span class="badge">Caddy reverse proxy</span>
+            <span class="badge">Optional Cloudflare Tunnel</span>
+            <span class="badge">Hardened Docker API via socket proxy</span>
+            <span class="badge">Persistent data volume</span>
+          </div>
+
+          <div class="cta" aria-label="Primary actions">
+            <a class="btn primary" href="https://github.com/RunClawd/runclawd" rel="noreferrer">View repo</a>
+            <a class="btn good" href="#install">One-line install</a>
+            <a class="btn" href="#what">What you get</a>
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="grid" aria-label="Features">
+            <div class="feature">
+              <h3>Opinionated defaults</h3>
+              <p>Ships a ready-to-run stack: gateway, web terminal, reverse proxy, optional public tunnel, and persistence.</p>
+            </div>
+            <div class="feature">
+              <h3>Production-minded</h3>
+              <p>
+                Avoids mounting Docker socket directly into the app; uses a Docker socket proxy with a limited API surface.
+              </p>
+            </div>
+            <div class="feature">
+              <h3>Fast onboarding</h3>
+              <p>Installer prints the onboarding URL, gateway token, terminal password, and tunnel URL when ready.</p>
+            </div>
+          </div>
+        </div>
+
+        <aside class="card codecard" id="install" aria-label="Install">
+          <div class="codehead">
+            <div>
+              <p class="kicker" style="margin: 0">Install</p>
+              <div class="small">Linux host. Run as root.</div>
+            </div>
+            <button class="copy" type="button" data-copy="#cmd">Copy</button>
+          </div>
+
+          <pre><code id="cmd">curl -fsSL https://get.runclawd.sh -o runclawd.sh
+sudo bash runclawd.sh</code></pre>
+
+          <div class="sep"></div>
+
+          <p class="kicker" id="what">What you get</p>
+          <div class="small">
+            A Compose stack that runs:
+            <div style="height: 10px"></div>
+            <div>
+              - OpenClaw Gateway (runclawd container)
+              <br />
+              - Web terminal (ttyd)
+              <br />
+              - Caddy reverse proxy routes: <span style="font-family: var(--mono)">/</span>,
+              <span style="font-family: var(--mono)">/term/</span>, <span style="font-family: var(--mono)">/openclaw/</span>
+              <br />
+              - Optional ephemeral public access via Cloudflare Tunnel
+              <br />
+              - Persistent volume for OpenClaw state and workspace
+            </div>
+          </div>
+
+          <div class="sep"></div>
+
+          <p class="kicker">Repository</p>
+          <div class="small" style="word-break: break-word">
+            <a href="https://github.com/RunClawd/runclawd" rel="noreferrer">https://github.com/RunClawd/runclawd</a>
+          </div>
+        </aside>
+      </section>
+
+      <footer>
+        <div>RunClawd</div>
+        <div class="small">A curated Docker Compose preset repository for OpenClaw.</div>
+      </footer>
+    </div>
+
+    <script>
+      (function () {
+        function copyText(text) {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            return navigator.clipboard.writeText(text);
+          }
+          var ta = document.createElement("textarea");
+          ta.value = text;
+          ta.style.position = "fixed";
+          ta.style.top = "-1000px";
+          ta.style.left = "-1000px";
+          document.body.appendChild(ta);
+          ta.focus();
+          ta.select();
+          try {
+            document.execCommand("copy");
+          } finally {
+            document.body.removeChild(ta);
+          }
+          return Promise.resolve();
+        }
+
+        var btns = document.querySelectorAll("[data-copy]");
+        btns.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var sel = btn.getAttribute("data-copy");
+            var el = document.querySelector(sel);
+            if (!el) return;
+            var text = el.textContent || "";
+            copyText(text.trim()).then(function () {
+              var old = btn.textContent;
+              btn.textContent = "Copied";
+              setTimeout(function () {
+                btn.textContent = old;
+              }, 900);
+            });
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>
