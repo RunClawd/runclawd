@@ -54,9 +54,9 @@
       }
 
       .wrap {
-        max-width: 1060px;
+        max-width: 900px; /* Reduced max-width for single column focus */
         margin: 0 auto;
-        padding: 32px 20px 64px;
+        padding: 32px 20px 80px;
       }
 
       header {
@@ -65,6 +65,7 @@
         justify-content: space-between;
         gap: 16px;
         animation: fadeUp 0.6s ease-out forwards;
+        margin-bottom: 60px; /* More space below header */
       }
 
       .brand {
@@ -124,25 +125,17 @@
         transform: translateY(-1px);
       }
 
+      /* Single Column Layout Changes */
       .hero {
-        display: grid;
-        grid-template-columns: 1.05fr 0.95fr;
-        gap: 18px;
-        margin-top: 26px;
+        text-align: center;
+        margin-bottom: 60px;
         opacity: 0;
         animation: fadeUp 0.8s ease-out 0.1s forwards;
       }
 
-      @media (max-width: 920px) {
-        .hero {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      .stack {
-        display: flex;
-        flex-direction: column;
-        gap: 18px;
+      .hero-content {
+        max-width: 680px;
+        margin: 0 auto;
       }
 
       .card {
@@ -151,9 +144,10 @@
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         border-radius: var(--radius);
-        padding: 22px;
+        padding: 24px;
         box-shadow: var(--shadow);
         transition: transform 0.3s ease, box-shadow 0.3s ease;
+        margin-bottom: 30px; /* Space between stacked cards */
       }
 
       .card:hover {
@@ -165,9 +159,9 @@
       .headline {
         font-family: var(--display);
         font-weight: 600;
-        font-size: 44px;
-        line-height: 1.05;
-        margin: 0;
+        font-size: 52px; /* Slightly larger */
+        line-height: 1.1;
+        margin: 0 0 16px;
         letter-spacing: -0.01em;
         background: linear-gradient(135deg, var(--text) 30%, var(--muted));
         -webkit-background-clip: text;
@@ -178,27 +172,29 @@
 
       @media (max-width: 520px) {
         .headline {
-          font-size: 34px;
+          font-size: 38px;
         }
       }
 
       .lead {
-        margin: 12px 0 0;
+        margin: 0 auto 24px;
         color: var(--muted);
-        font-size: 15px;
+        font-size: 17px; /* Slightly larger */
         line-height: 1.6;
+        max-width: 600px;
       }
 
       .badges {
-        margin-top: 14px;
         display: flex;
         flex-wrap: wrap;
         gap: 10px;
+        justify-content: center; /* Centered badges */
+        margin-bottom: 24px;
       }
 
       .badge {
         font-size: 12px;
-        padding: 7px 10px;
+        padding: 7px 12px;
         border-radius: 999px;
         border: 1px solid var(--border);
         background: rgba(255, 255, 255, 0.04);
@@ -214,10 +210,10 @@
       }
 
       .cta {
-        margin-top: 18px;
         display: flex;
-        gap: 10px;
+        gap: 12px;
         flex-wrap: wrap;
+        justify-content: center; /* Centered CTA */
       }
 
       .btn {
@@ -225,14 +221,14 @@
         align-items: center;
         justify-content: center;
         gap: 10px;
-        padding: 12px 14px;
+        padding: 12px 18px; /* Larger buttons */
         border-radius: 12px;
         border: 1px solid var(--border);
         background: rgba(255, 255, 255, 0.05);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         color: var(--text);
-        font-size: 14px;
+        font-size: 15px;
         font-weight: 500;
         transition: all 0.2s ease;
       }
@@ -262,27 +258,31 @@
         box-shadow: 0 8px 20px rgba(20, 184, 166, 0.3);
       }
 
-      .grid {
-        margin-top: 18px;
+      .features-section {
+        margin-bottom: 40px;
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 14px;
+        gap: 18px;
+        opacity: 0;
+        animation: fadeUp 0.8s ease-out 0.2s forwards;
       }
 
-      @media (max-width: 920px) {
-        .grid {
+      @media (max-width: 768px) {
+        .features-section {
           grid-template-columns: 1fr;
         }
       }
 
       .feature {
-        padding: 16px;
+        padding: 20px;
         border-radius: 16px;
         border: 1px solid var(--border);
         background: rgba(255, 255, 255, 0.02);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         transition: transform 0.3s ease, background 0.3s;
+        height: 100%; /* Equal height */
+        box-sizing: border-box;
       }
 
       .feature:hover {
@@ -295,19 +295,22 @@
         margin: 0;
         font-family: var(--display);
         font-weight: 500;
-        font-size: 15px;
+        font-size: 16px;
         letter-spacing: 0.2px;
+        color: var(--text);
       }
 
       .feature p {
-        margin: 7px 0 0;
-        font-size: 13px;
+        margin: 8px 0 0;
+        font-size: 14px;
         color: var(--muted);
         line-height: 1.55;
       }
 
       .codecard {
-        padding: 18px;
+        padding: 24px;
+        opacity: 0;
+        animation: fadeUp 0.8s ease-out 0.3s forwards;
       }
 
       .kicker {
@@ -315,37 +318,50 @@
         color: var(--muted);
         text-transform: uppercase;
         letter-spacing: 0.18em;
-        margin: 0 0 10px;
+        margin: 0 0 12px;
         font-weight: 600;
+      }
+
+      .section-title {
+        font-family: var(--display);
+        font-size: 24px;
+        margin: 0 0 4px;
+        font-weight: 600;
+      }
+
+      .section-sub {
+         font-size: 14px;
+         color: var(--muted);
+         margin: 0 0 20px;
       }
 
       pre {
         margin: 0;
-        padding: 14px;
+        padding: 16px;
         border-radius: 14px;
         border: 1px solid var(--border);
-        background: rgba(0, 0, 0, 0.3);
+        background: rgba(0, 0, 0, 0.4); /* Darker background for code */
         overflow: auto;
         font-family: var(--mono);
-        font-size: 12.5px;
-        line-height: 1.55;
+        font-size: 13px;
+        line-height: 1.6;
         color: var(--text);
       }
 
       .codehead {
         display: flex;
-        align-items: center;
+        align-items: flex-end; /* Align bottom to match text baselines if needed */
         justify-content: space-between;
         gap: 10px;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
       }
 
       .copy {
         cursor: pointer;
         user-select: none;
         font-size: 13px;
-        padding: 9px 12px;
-        border-radius: 12px;
+        padding: 8px 12px;
+        border-radius: 8px;
         border: 1px solid var(--border);
         background: rgba(255, 255, 255, 0.05);
         backdrop-filter: blur(10px);
@@ -356,36 +372,32 @@
       .copy:hover {
         background: rgba(255, 255, 255, 0.1);
         color: var(--text);
-        transform: scale(1.05);
-      }
-
-      .copy:active {
-        transform: scale(0.95);
       }
 
       footer {
-        margin-top: 20px;
+        margin-top: 40px;
         color: var(--muted);
         font-size: 13px;
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
+        justify-content: center; /* Center footer */
+        flex-direction: column;
         gap: 10px;
         opacity: 0;
-        animation: fadeUp 0.8s ease-out 0.3s forwards;
+        animation: fadeUp 0.8s ease-out 0.4s forwards;
+        text-align: center;
       }
 
       .small {
         color: var(--faint);
-        font-size: 12px;
+        font-size: 13px;
         line-height: 1.6;
       }
 
       .sep {
         height: 1px;
         background: var(--border);
-        margin: 18px 0;
+        margin: 24px 0;
       }
     </style>
   </head>
@@ -416,137 +428,138 @@
         </nav>
       </header>
 
-      <section class="hero" aria-label="Hero">
-        <div class="card">
-          <p class="kicker">OpenClaw deployment preset</p>
-          <h2 class="headline">Run OpenClaw like you mean it.</h2>
-          <p class="lead">
-            RunClawd is a curated Docker Compose preset repository for OpenClaw. It gives you an opinionated,
-            production-oriented deployment with a one-line installer — so you can spend less time wiring infra and more time
-            building.
-          </p>
+      <main>
+        <!-- Hero Section -->
+        <section class="hero" aria-label="Hero">
+          <div class="hero-content">
+            <p class="kicker">OpenClaw deployment preset</p>
+            <h2 class="headline">Run OpenClaw like you mean it.</h2>
+            <p class="lead">
+              RunClawd is a curated Docker Compose preset repository for OpenClaw. It gives you an opinionated,
+              production-oriented deployment with a one-line installer.
+            </p>
 
-          <div class="badges" aria-label="Highlights">
-            <span class="badge">Docker Compose</span>
-            <span class="badge">Caddy reverse proxy</span>
-            <span class="badge">Optional Cloudflare Tunnel</span>
-            <span class="badge">Hardened Docker API via socket proxy</span>
-            <span class="badge">Persistent data volume</span>
+            <div class="badges" aria-label="Highlights">
+              <span class="badge">Docker Compose</span>
+              <span class="badge">Caddy reverse proxy</span>
+              <span class="badge">Cloudflare Tunnel</span>
+              <span class="badge">Socket proxy</span>
+              <span class="badge">Persistence</span>
+            </div>
+
+            <div class="cta" aria-label="Primary actions">
+              <a class="btn primary" href="https://github.com/RunClawd/runclawd" rel="noreferrer">View repo</a>
+              <a class="btn good" href="#install">One-line install</a>
+              <a class="btn" href="#what">What you get</a>
+            </div>
+          </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features-section" aria-label="Features">
+          <div class="feature">
+            <h3>Opinionated defaults</h3>
+            <p>Ships a ready-to-run stack: gateway, web terminal, reverse proxy, optional public tunnel, and persistence.</p>
+          </div>
+          <div class="feature">
+            <h3>Production-minded</h3>
+            <p>
+              Avoids mounting Docker socket directly into the app; uses a Docker socket proxy with a limited API surface.
+            </p>
+          </div>
+          <div class="feature">
+            <h3>Fast onboarding</h3>
+            <p>Installer prints the onboarding URL, gateway token, basic auth password, and tunnel URL when ready.</p>
+          </div>
+        </section>
+
+        <!-- Install Section -->
+        <section class="card codecard" id="install" aria-label="Install">
+          <div class="codehead">
+            <div>
+              <h3 class="section-title">Install</h3>
+              <div class="section-sub">Linux host. Run as root.</div>
+            </div>
+            <button class="copy" type="button" data-copy="#cmd">Copy</button>
           </div>
 
-          <div class="cta" aria-label="Primary actions">
-            <a class="btn primary" href="https://github.com/RunClawd/runclawd" rel="noreferrer">View repo</a>
-            <a class="btn good" href="#install">One-line install</a>
-            <a class="btn" href="#what">What you get</a>
+          <pre><code id="cmd">curl -fsSL https://get.runclawd.sh -o get-runclawd.sh
+sudo bash get-runclawd.sh</code></pre>
+
+          <div style="height: 24px"></div>
+
+          <p class="kicker">Options</p>
+          <div class="small" style="margin-bottom: 12px">
+            Rebuild the <span style="font-family: var(--mono)">runclawd</span> image before starting services:
+          </div>
+          <pre><code id="build-cmd">sudo bash get-runclawd.sh --build</code></pre>
+
+          <div style="height: 24px"></div>
+
+          <div class="small" style="margin-bottom: 12px">
+            Use a named Cloudflare Tunnel token (instead of quick tunnel):
+          </div>
+          <pre><code id="token-cmd">export CF_TUNNEL_TOKEN=...
+export SERVICE_FQDN_OPENCLAW=openclaw.example.com
+sudo --preserve-env=CF_TUNNEL_TOKEN,SERVICE_FQDN_OPENCLAW bash get-runclawd.sh</code></pre>
+
+          <div style="height: 24px"></div>
+
+          <div class="small" style="margin-bottom: 12px">
+            Local development mode (run from the current directory):
+          </div>
+          <pre><code id="local-cmd">bash get-runclawd.sh --local</code></pre>
+
+          <div class="sep"></div>
+
+          <p class="kicker" id="what">What you get</p>
+          <div class="small">
+            A Compose stack that runs:
+            <div style="height: 10px"></div>
+            <div>
+              - OpenClaw Gateway (runclawd container)
+              <br />
+              - Web terminal (ttyd)
+              <br />
+              - Caddy reverse proxy routes: <span style="font-family: var(--mono)">/</span>,
+              <span style="font-family: var(--mono)">/term/</span>, <span style="font-family: var(--mono)">/openclaw/</span>
+              <br />
+              - Optional ephemeral public access via Cloudflare Tunnel
+              <br />
+              - Persistent volume for OpenClaw state and workspace
+            </div>
           </div>
 
           <div class="sep"></div>
 
-          <div class="grid" aria-label="Features">
-            <div class="feature">
-              <h3>Opinionated defaults</h3>
-              <p>Ships a ready-to-run stack: gateway, web terminal, reverse proxy, optional public tunnel, and persistence.</p>
-            </div>
-            <div class="feature">
-              <h3>Production-minded</h3>
-              <p>
-                Avoids mounting Docker socket directly into the app; uses a Docker socket proxy with a limited API surface.
-              </p>
-            </div>
-            <div class="feature">
-              <h3>Fast onboarding</h3>
-              <p>Installer prints the onboarding URL, gateway token, basic auth password, and tunnel URL when ready.</p>
+          <p class="kicker">Repository</p>
+          <div class="small" style="word-break: break-word">
+            <a href="https://github.com/RunClawd/runclawd" rel="noreferrer">https://github.com/RunClawd/runclawd</a>
+          </div>
+        </section>
+
+        <!-- Device Approval Section -->
+        <section class="card codecard" id="approval" aria-label="Device Approval">
+          <div class="codehead">
+            <div>
+              <h3 class="section-title">Device Approval</h3>
+              <div class="section-sub">Required for first access</div>
             </div>
           </div>
-        </div>
 
-        <div class="stack">
-          <aside class="card codecard" id="install" aria-label="Install">
-            <div class="codehead">
-              <div>
-                <p class="kicker" style="margin: 0">Install</p>
-                <div class="small">Linux host. Run as root.</div>
-              </div>
-              <button class="copy" type="button" data-copy="#cmd">Copy</button>
-            </div>
-
-            <pre><code id="cmd">curl -fsSL https://get.runclawd.sh -o get-runclawd.sh
-sudo bash get-runclawd.sh</code></pre>
-
-            <div style="height: 14px"></div>
-
-            <p class="kicker" style="margin: 0">Options</p>
-            <div class="small" style="margin-bottom: 12px">
-              Rebuild the <span style="font-family: var(--mono)">runclawd</span> image before starting services:
-            </div>
-            <pre><code id="build-cmd">sudo bash get-runclawd.sh --build</code></pre>
-
-            <div style="height: 14px"></div>
-
-            <div class="small" style="margin-bottom: 12px">
-              Use a named Cloudflare Tunnel token (instead of quick tunnel):
-            </div>
-            <pre><code id="token-cmd">export CF_TUNNEL_TOKEN=...
-export SERVICE_FQDN_OPENCLAW=openclaw.example.com
-sudo --preserve-env=CF_TUNNEL_TOKEN,SERVICE_FQDN_OPENCLAW bash get-runclawd.sh</code></pre>
-
-            <div style="height: 14px"></div>
-
-            <div class="small" style="margin-bottom: 12px">
-              Local development mode (run from the current directory):
-            </div>
-            <pre><code id="local-cmd">bash get-runclawd.sh --local</code></pre>
-
-            <div class="sep"></div>
-
-            <p class="kicker" id="what">What you get</p>
-            <div class="small">
-              A Compose stack that runs:
-              <div style="height: 10px"></div>
-              <div>
-                - OpenClaw Gateway (runclawd container)
-                <br />
-                - Web terminal (ttyd)
-                <br />
-                - Caddy reverse proxy routes: <span style="font-family: var(--mono)">/</span>,
-                <span style="font-family: var(--mono)">/term/</span>, <span style="font-family: var(--mono)">/openclaw/</span>
-                <br />
-                - Optional ephemeral public access via Cloudflare Tunnel
-                <br />
-                - Persistent volume for OpenClaw state and workspace
-              </div>
-            </div>
-
-            <div class="sep"></div>
-
-            <p class="kicker">Repository</p>
-            <div class="small" style="word-break: break-word">
-              <a href="https://github.com/RunClawd/runclawd" rel="noreferrer">https://github.com/RunClawd/runclawd</a>
-            </div>
-          </aside>
-
-          <div class="card codecard" id="approval" aria-label="Device Approval">
-            <div class="codehead">
-              <div>
-                <p class="kicker" style="margin: 0">Device Approval</p>
-                <div class="small">Required for first access</div>
-              </div>
-            </div>
-
-            <div class="small" style="margin-bottom: 12px">
-              1. List devices to find the <strong>Request ID</strong> (UUID):
-            </div>
-            <pre><code id="list-cmd">openclaw devices list</code></pre>
-
-            <div style="height: 16px"></div>
-
-            <div class="small" style="margin-bottom: 12px">
-              2. Approve using the Request ID:
-            </div>
-            <pre><code id="approve-cmd">openclaw devices approve <span style="color:var(--accent2)">&lt;request_id&gt;</span></code></pre>
+          <div class="small" style="margin-bottom: 12px">
+            1. List devices to find the <strong>Request ID</strong> (UUID):
           </div>
-        </div>
-      </section>
+          <pre><code id="list-cmd">openclaw devices list</code></pre>
+
+          <div style="height: 24px"></div>
+
+          <div class="small" style="margin-bottom: 12px">
+            2. Approve using the Request ID:
+          </div>
+          <pre><code id="approve-cmd">openclaw devices approve <span style="color:var(--accent2)">&lt;request_id&gt;</span></code></pre>
+        </section>
+      </main>
 
       <footer>
         <div>RunClawd</div>
