@@ -139,6 +139,12 @@
         }
       }
 
+      .stack {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
       .card {
         border: 1px solid var(--border);
         background: var(--panel);
@@ -454,45 +460,68 @@
           </div>
         </div>
 
-        <aside class="card codecard" id="install" aria-label="Install">
-          <div class="codehead">
-            <div>
-              <p class="kicker" style="margin: 0">Install</p>
-              <div class="small">Linux host. Run as root.</div>
+        <div class="stack">
+          <aside class="card codecard" id="install" aria-label="Install">
+            <div class="codehead">
+              <div>
+                <p class="kicker" style="margin: 0">Install</p>
+                <div class="small">Linux host. Run as root.</div>
+              </div>
+              <button class="copy" type="button" data-copy="#cmd">Copy</button>
             </div>
-            <button class="copy" type="button" data-copy="#cmd">Copy</button>
-          </div>
 
-          <pre><code id="cmd">curl -fsSL https://get.runclawd.sh -o runclawd.sh
+            <pre><code id="cmd">curl -fsSL https://get.runclawd.sh -o runclawd.sh
 sudo bash runclawd.sh</code></pre>
 
-          <div class="sep"></div>
+            <div class="sep"></div>
 
-          <p class="kicker" id="what">What you get</p>
-          <div class="small">
-            A Compose stack that runs:
-            <div style="height: 10px"></div>
-            <div>
-              - OpenClaw Gateway (runclawd container)
-              <br />
-              - Web terminal (ttyd)
-              <br />
-              - Caddy reverse proxy routes: <span style="font-family: var(--mono)">/</span>,
-              <span style="font-family: var(--mono)">/term/</span>, <span style="font-family: var(--mono)">/openclaw/</span>
-              <br />
-              - Optional ephemeral public access via Cloudflare Tunnel
-              <br />
-              - Persistent volume for OpenClaw state and workspace
+            <p class="kicker" id="what">What you get</p>
+            <div class="small">
+              A Compose stack that runs:
+              <div style="height: 10px"></div>
+              <div>
+                - OpenClaw Gateway (runclawd container)
+                <br />
+                - Web terminal (ttyd)
+                <br />
+                - Caddy reverse proxy routes: <span style="font-family: var(--mono)">/</span>,
+                <span style="font-family: var(--mono)">/term/</span>, <span style="font-family: var(--mono)">/openclaw/</span>
+                <br />
+                - Optional ephemeral public access via Cloudflare Tunnel
+                <br />
+                - Persistent volume for OpenClaw state and workspace
+              </div>
             </div>
-          </div>
 
-          <div class="sep"></div>
+            <div class="sep"></div>
 
-          <p class="kicker">Repository</p>
-          <div class="small" style="word-break: break-word">
-            <a href="https://github.com/RunClawd/runclawd" rel="noreferrer">https://github.com/RunClawd/runclawd</a>
+            <p class="kicker">Repository</p>
+            <div class="small" style="word-break: break-word">
+              <a href="https://github.com/RunClawd/runclawd" rel="noreferrer">https://github.com/RunClawd/runclawd</a>
+            </div>
+          </aside>
+
+          <div class="card codecard" id="approval" aria-label="Device Approval">
+            <div class="codehead">
+              <div>
+                <p class="kicker" style="margin: 0">Device Approval</p>
+                <div class="small">Required for first access</div>
+              </div>
+            </div>
+
+            <div class="small" style="margin-bottom: 12px">
+              1. List devices to find the <strong>Request ID</strong> (UUID):
+            </div>
+            <pre><code id="list-cmd">openclaw devices list</code></pre>
+
+            <div style="height: 16px"></div>
+
+            <div class="small" style="margin-bottom: 12px">
+              2. Approve using the Request ID:
+            </div>
+            <pre><code id="approve-cmd">openclaw devices approve <span style="color:var(--accent2)">&lt;request_id&gt;</span></code></pre>
           </div>
-        </aside>
+        </div>
       </section>
 
       <footer>

@@ -231,9 +231,9 @@ print_result() {
     ${tunnel_url}/openclaw/?arg=devices&arg=list
 
   Approve a device:
-    ${tunnel_url}/openclaw/?arg=devices&arg=approve&arg={device_id}
+    ${tunnel_url}/openclaw/?arg=devices&arg=approve&arg={request_id}
 
-  Tip: open the "List devices" link, copy the returned device_id, then replace "{device_id}" in the approve link.
+  Tip: open the "List devices" link, find the pending request (UUID), copy its ID, then replace "{request_id}" in the approve link.
 
 Notes:
   - If the URL is not reachable right away, wait a few minutes for DNS/route propagation and try again.
