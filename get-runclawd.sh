@@ -10,7 +10,47 @@ fi
 set -euo pipefail
 
 REPO_SSH_URL="https://github.com/RunClawd/runclawd.git"
-INSTALL_DIR="/opt/runclawd"
+DEFAULT_INSTALL_DIR="/opt/runclawd"
+INSTALL_DIR="$DEFAULT_INSTALL_DIR"
+
+LOCAL_MODE=0
+if [[ "${RUNCLAWD_LOCAL:-}" = "1" ]]; then
+  LOCAL_MODE=1
+fi
+BUILD_MODE=0
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --local)
+      LOCAL_MODE=1
+      shift
+      ;;
+    --build)
+      BUILD_MODE=1
+      shift
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+if (( LOCAL_MODE )); then
+  INSTALL_DIR="$(pwd)"
+fi
+
+USE_TUNNEL_TOKEN=0
+if [[ -n "${CF_TUNNEL_TOKEN:-}" ]]; then
+  USE_TUNNEL_TOKEN=1
+fi
+
+compose_base_args() {
+  if (( USE_TUNNEL_TOKEN )); then
+    printf '%s\n' "-f" "docker-compose.yaml" "-f" "docker-compose.tunnel.yaml"
+  else
+    printf '%s\n' "-f" "docker-compose.yaml"
+  fi
+}
 
 log() {
   printf '%s\n' "$*" >&2
@@ -134,18 +174,51 @@ clone_or_update_repo() {
   git clone "$REPO_SSH_URL" "$INSTALL_DIR"
 }
 
+ensure_cloudflared_config() {
+  if (( ! USE_TUNNEL_TOKEN )); then
+    return 0
+  fi
+
+  local dir
+  dir="$INSTALL_DIR/cloudflared"
+  mkdir -p "$dir"
+
+  if [[ -n "${SERVICE_FQDN_OPENCLAW:-}" ]]; then
+    cat >"$dir/config.yml" <<EOF
+ingress:
+  - hostname: ${SERVICE_FQDN_OPENCLAW}
+    service: http://caddy:80
+  - service: http_status:404
+EOF
+  else
+    cat >"$dir/config.yml" <<EOF
+ingress:
+  - service: http://caddy:80
+  - service: http_status:404
+EOF
+  fi
+}
+
 compose_up() {
   local compose
   compose="$(docker_compose_cmd)"
   log "Starting services with docker compose..."
-  (cd "$INSTALL_DIR" && $compose up -d)
+  local -a args
+  mapfile -t args < <(compose_base_args)
+  if (( BUILD_MODE )); then
+    log "Rebuilding runclawd image (docker compose build runclawd)..."
+    (cd "$INSTALL_DIR" && CF_TUNNEL_TOKEN="${CF_TUNNEL_TOKEN:-}" $compose "${args[@]}" build runclawd)
+  fi
+  (cd "$INSTALL_DIR" && CF_TUNNEL_TOKEN="${CF_TUNNEL_TOKEN:-}" $compose "${args[@]}" up -d)
 }
 
 compose_logs() {
   local service="$1"
   local compose
   compose="$(docker_compose_cmd)"
-  (cd "$INSTALL_DIR" && $compose logs --no-color "$service" 2>/dev/null || true)
+  local -a args
+  mapfile -t args < <(compose_base_args)
+  (cd "$INSTALL_DIR" && $compose "${args[@]}" logs --no-color "$service" 2>/dev/null || true)
 }
 
 extract_first_match() {
@@ -163,8 +236,14 @@ wait_for_values() {
   start_ts="$(date +%s)"
 
   local access_token=""
-  local web_term_password=""
+  local basic_auth_password=""
   local tunnel_url=""
+
+  if (( USE_TUNNEL_TOKEN )); then
+    if [[ -n "${SERVICE_FQDN_OPENCLAW:-}" ]]; then
+      tunnel_url="https://${SERVICE_FQDN_OPENCLAW}"
+    fi
+  fi
 
   while true; do
     local now_ts
@@ -180,18 +259,24 @@ wait_for_values() {
       access_token="$(echo "$runclawd_logs" | sed -nE 's/.*Access Token:[[:space:]]*([^[:space:]]+).*/\1/p' | tail -n 1 || true)"
     fi
 
-    if [[ -z "$web_term_password" ]]; then
-      web_term_password="$(echo "$runclawd_logs" | sed -nE 's/.*Web Terminal Password:[[:space:]]*([^[:space:]]+).*/\1/p' | tail -n 1 || true)"
+    if [[ -z "$basic_auth_password" ]]; then
+      local caddy_logs
+      caddy_logs="$(compose_logs caddy | tail -n 500)"
+      basic_auth_password="$(echo "$caddy_logs" | sed -nE 's/.*Basic Auth Password:[[:space:]]*([^[:space:]]+).*/\1/p' | tail -n 1 || true)"
     fi
 
-    if [[ -z "$tunnel_url" ]]; then
-      local cloudflared_logs
-      cloudflared_logs="$(compose_logs cloudflared | tail -n 500)"
-      tunnel_url="$(extract_first_match "$cloudflared_logs" 'https://[a-z0-9-]+\.trycloudflare\.com' || true)"
+    if (( USE_TUNNEL_TOKEN )); then
+      true
+    else
+      if [[ -z "$tunnel_url" ]]; then
+        local cloudflared_logs
+        cloudflared_logs="$(compose_logs cloudflared | tail -n 500)"
+        tunnel_url="$(extract_first_match "$cloudflared_logs" 'https://[a-z0-9-]+\.trycloudflare\.com' || true)"
+      fi
     fi
 
-    if [[ -n "$access_token" && -n "$web_term_password" && -n "$tunnel_url" ]]; then
-      printf '%s\n' "$access_token" "$web_term_password" "$tunnel_url"
+    if [[ -n "$access_token" && -n "$basic_auth_password" && ( $USE_TUNNEL_TOKEN -eq 1 || -n "$tunnel_url" ) ]]; then
+      printf '%s\n' "$access_token" "$basic_auth_password" "$tunnel_url"
       return 0
     fi
 
@@ -200,33 +285,81 @@ wait_for_values() {
 
   log "Timed out waiting for required values from logs."
   log "- Access Token: ${access_token:-<missing>}"
-  log "- Web Terminal Password: ${web_term_password:-<missing>}"
-  log "- Tunnel URL: ${tunnel_url:-<missing>}"
+  log "- Basic Auth Password: ${basic_auth_password:-<missing>}"
+  if (( USE_TUNNEL_TOKEN )); then
+    log "- Tunnel URL: ${tunnel_url:-<skipped>}"
+  else
+    log "- Tunnel URL: ${tunnel_url:-<missing>}"
+  fi
   return 1
 }
 
 print_result() {
   local access_token="$1"
-  local web_term_password="$2"
+  local basic_auth_password="$2"
   local tunnel_url="$3"
+
+  if (( USE_TUNNEL_TOKEN )); then
+    cat <<EOF
+=====================================================================
+ 🦞 OpenClaw is ready
+=====================================================================
+
+[1/2] Basic Auth
+  Basic Auth Username: runclawd
+  Basic Auth Password: ${basic_auth_password}
+
+[2/2] Public access (Cloudflare Tunnel)
+  CF_TUNNEL_TOKEN is set. Configure a Public Hostname / Route in Cloudflare for this tunnel.
+EOF
+
+    if [[ -n "$tunnel_url" ]]; then
+      cat <<EOF
+  Public URL: ${tunnel_url}
+  Then access:
+    ${tunnel_url}/openclaw/?arg=onboard
+    ${tunnel_url}/term/
+    ${tunnel_url}/?token=${access_token}
+
+Notes:
+  - All HTTP endpoints are protected by Caddy HTTP Basic Auth (including /openclaw onboarding routes).
+
+EOF
+    else
+      cat <<EOF
+  Then access:
+    /openclaw/?arg=onboard
+    /term/
+    /?token=${access_token}
+
+Notes:
+  - All HTTP endpoints are protected by Caddy HTTP Basic Auth (including /openclaw onboarding routes).
+
+EOF
+    fi
+
+    return 0
+  fi
 
   cat <<EOF
 =====================================================================
  🦞 OpenClaw is ready
 =====================================================================
 
-[1/4] Onboarding
+[1/5] Basic Auth
+  Basic Auth Username: runclawd
+  Basic Auth Password: ${basic_auth_password}
+
+[2/5] Onboarding
   ${tunnel_url}/openclaw/?arg=onboard
 
-[2/4] Web Terminal
-  URL:      ${tunnel_url}/term/
-  Username: openclaw
-  Password: ${web_term_password}
+[3/5] Web Terminal
+  ${tunnel_url}/term/
 
-[3/4] Gateway Dashboard
+[4/5] Gateway Dashboard
   ${tunnel_url}/?token=${access_token}
 
-[4/4] Device approval (required)
+[5/5] Device approval (required)
   List devices:
     ${tunnel_url}/openclaw/?arg=devices&arg=list
 
@@ -238,35 +371,45 @@ print_result() {
 Notes:
   - If the URL is not reachable right away, wait a few minutes for DNS/route propagation and try again.
   - You must approve the device before you can access it.
+  - All HTTP endpoints are protected by Caddy HTTP Basic Auth (including /openclaw onboarding routes).
 
 EOF
 }
 
 main() {
-  require_root
-  ensure_deps
-  install_docker
+  if (( ! LOCAL_MODE )); then
+    require_root
+    ensure_deps
+    install_docker
+  fi
 
   if ! need_cmd docker; then
     die "Docker installation did not produce a usable 'docker' command."
   fi
 
-  clone_or_update_repo
+  if (( ! LOCAL_MODE )); then
+    clone_or_update_repo
+  else
+    if [[ ! -f "$INSTALL_DIR/docker-compose.yaml" ]]; then
+      die "Local mode expects docker-compose.yaml in current directory."
+    fi
+  fi
+  ensure_cloudflared_config
   compose_up
 
   local values
   if ! values="$(wait_for_values 300)"; then
-    die "Failed to extract Access Token / Web Terminal Password / Tunnel URL from logs."
+    die "Failed to extract Access Token / Basic Auth Password / Tunnel URL from logs."
   fi
 
   local access_token
-  local web_term_password
+  local basic_auth_password
   local tunnel_url
   access_token="$(echo "$values" | sed -n '1p')"
-  web_term_password="$(echo "$values" | sed -n '2p')"
+  basic_auth_password="$(echo "$values" | sed -n '2p')"
   tunnel_url="$(echo "$values" | sed -n '3p')"
 
-  print_result "$access_token" "$web_term_password" "$tunnel_url"
+  print_result "$access_token" "$basic_auth_password" "$tunnel_url"
 }
 
 main "$@"

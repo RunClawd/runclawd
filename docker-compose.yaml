@@ -9,6 +9,29 @@ services:
     restart: unless-stopped
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - runclawd-auth:/runclawd
+    command:
+      - sh
+      - -c
+      - |
+        set -eu
+        mkdir -p /runclawd
+        AUTH_FILE=/runclawd/basic-auth.env
+        if [ ! -f "$$AUTH_FILE" ]; then
+          PASS="$$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32)"
+          HASH="$$(caddy hash-password --plaintext "$$PASS")"
+          {
+            echo "RUNCLAWD_BASIC_AUTH_USER=runclawd"
+            echo "RUNCLAWD_BASIC_AUTH_PASSWORD='$$PASS'"
+            echo "RUNCLAWD_BASIC_AUTH_HASH='$$HASH'"
+          } >"$$AUTH_FILE"
+          chmod 600 "$$AUTH_FILE" || true
+        fi
+        . "$$AUTH_FILE"
+        echo "Basic Auth Username: $${RUNCLAWD_BASIC_AUTH_USER}"
+        echo "Basic Auth Password: $${RUNCLAWD_BASIC_AUTH_PASSWORD}"
+        export RUNCLAWD_BASIC_AUTH_USER RUNCLAWD_BASIC_AUTH_HASH
+        exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
 
   docker-proxy:
     image: tecnativa/docker-socket-proxy:latest
@@ -94,7 +117,7 @@ services:
       OPENCLAW_BETA: ${OPENCLAW_BETA:-false}
 
     volumes:
-      - openclaw-data:/data
+      - runclawd-data:/data
 
     command: ["bash", "/app/scripts/bootstrap.sh"]
     healthcheck:
@@ -105,5 +128,5 @@ services:
       start_period: 120s
 
 volumes:
-  openclaw-data:
-  
+  runclawd-data:
+  runclawd-auth:

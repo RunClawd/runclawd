@@ -455,7 +455,7 @@
             </div>
             <div class="feature">
               <h3>Fast onboarding</h3>
-              <p>Installer prints the onboarding URL, gateway token, terminal password, and tunnel URL when ready.</p>
+              <p>Installer prints the onboarding URL, gateway token, basic auth password, and tunnel URL when ready.</p>
             </div>
           </div>
         </div>
@@ -470,8 +470,32 @@
               <button class="copy" type="button" data-copy="#cmd">Copy</button>
             </div>
 
-            <pre><code id="cmd">curl -fsSL https://get.runclawd.sh -o runclawd.sh
-sudo bash runclawd.sh</code></pre>
+            <pre><code id="cmd">curl -fsSL https://get.runclawd.sh -o get-runclawd.sh
+sudo bash get-runclawd.sh</code></pre>
+
+            <div style="height: 14px"></div>
+
+            <p class="kicker" style="margin: 0">Options</p>
+            <div class="small" style="margin-bottom: 12px">
+              Rebuild the <span style="font-family: var(--mono)">runclawd</span> image before starting services:
+            </div>
+            <pre><code id="build-cmd">sudo bash get-runclawd.sh --build</code></pre>
+
+            <div style="height: 14px"></div>
+
+            <div class="small" style="margin-bottom: 12px">
+              Use a named Cloudflare Tunnel token (instead of quick tunnel):
+            </div>
+            <pre><code id="token-cmd">export CF_TUNNEL_TOKEN=...
+export SERVICE_FQDN_OPENCLAW=openclaw.example.com
+sudo --preserve-env=CF_TUNNEL_TOKEN,SERVICE_FQDN_OPENCLAW bash get-runclawd.sh</code></pre>
+
+            <div style="height: 14px"></div>
+
+            <div class="small" style="margin-bottom: 12px">
+              Local development mode (run from the current directory):
+            </div>
+            <pre><code id="local-cmd">bash get-runclawd.sh --local</code></pre>
 
             <div class="sep"></div>
 

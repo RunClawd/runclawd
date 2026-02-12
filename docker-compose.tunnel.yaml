@@ -1,0 +1,9 @@
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    environment:
+      TUNNEL_TOKEN: ${CF_TUNNEL_TOKEN}
+    volumes:
+      - ./cloudflared/config.yml:/etc/cloudflared/config.yml:ro
+    command: tunnel run

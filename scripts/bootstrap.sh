@@ -110,7 +110,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
     "bind": "lan",
     "controlUi": {
       "enabled": true,
-      "allowInsecureAuth": false
+      "allowInsecureAuth": true
     },
     "trustedProxies": [
       "*"
@@ -158,19 +158,13 @@ export OPENCLAW_STATE_DIR="$OPENCLAW_STATE"
 WEB_TERM_PORT="${WEB_TERM_PORT:-7681}"
 WEB_TERM_OPENCLAW_PORT="${WEB_TERM_OPENCLAW_PORT:-7682}"
 WEB_TERM_PATH="${WEB_TERM_PATH:-/term}"
-WEB_TERM_USER="${WEB_TERM_USER:-openclaw}"
-WEB_TERM_PASSWORD_GENERATED="0"
-if [ -z "${WEB_TERM_PASSWORD:-}" ]; then
-    WEB_TERM_PASSWORD="$(openssl rand -hex 16 2>/dev/null || node -e "console.log(require('crypto').randomBytes(16).toString('hex'))")"
-    WEB_TERM_PASSWORD_GENERATED="1"
-fi
 
 if command -v ttyd >/dev/null 2>&1; then
-    ttyd -W -w "$WORKSPACE_DIR" -i 0.0.0.0 -p "$WEB_TERM_PORT" -b "$WEB_TERM_PATH" -c "$WEB_TERM_USER:$WEB_TERM_PASSWORD" \
+    ttyd -W -w "$WORKSPACE_DIR" -i 0.0.0.0 -p "$WEB_TERM_PORT" -b "$WEB_TERM_PATH" \
         bash \
         >/dev/null 2>&1 &
 
-    ttyd -W -w "$WORKSPACE_DIR" -i 0.0.0.0 -p "$WEB_TERM_OPENCLAW_PORT" -b "/openclaw" -c "$WEB_TERM_USER:$WEB_TERM_PASSWORD" -a \
+    ttyd -W -w "$WORKSPACE_DIR" -i 0.0.0.0 -p "$WEB_TERM_OPENCLAW_PORT" -b "/openclaw" -a \
         openclaw \
         >/dev/null 2>&1 &
 fi
@@ -224,8 +218,9 @@ WEB_TERM_URL_PATH="${WEB_TERM_PATH%/}"
 if [ -z "$WEB_TERM_URL_PATH" ]; then
     WEB_TERM_URL_PATH="/"
 fi
-echo "🖥️  Web Terminal (Local): http://localhost:${WEB_TERM_PORT}${WEB_TERM_URL_PATH}/ (user: ${WEB_TERM_USER})"
-echo "🔐 Web Terminal Password: ${WEB_TERM_PASSWORD}"
+
+echo "🖥️  Web Terminal (Local): http://localhost:${WEB_TERM_PORT}${WEB_TERM_URL_PATH}/"
+echo "�️  Web Terminal (OpenClaw): http://localhost:${WEB_TERM_OPENCLAW_PORT}/openclaw/"
 if [ -n "$SERVICE_FQDN_OPENCLAW" ]; then
     echo "☁️  Service URL (Public): https://${SERVICE_FQDN_OPENCLAW}?token=$TOKEN"
     echo "    (Wait for cloud tunnel to propagate if just started)"
