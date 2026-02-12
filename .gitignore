@@ -9,3 +9,5 @@ node_modules/
 .next/
 dist/
 # docs/
+
+cloudflared/config.yml

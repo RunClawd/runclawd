@@ -18,6 +18,7 @@ if [[ "${RUNCLAWD_LOCAL:-}" = "1" ]]; then
   LOCAL_MODE=1
 fi
 BUILD_MODE=0
+RUNCLAWD_IMAGE_REF="${RUNCLAWD_IMAGE:-}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -28,6 +29,14 @@ while [[ $# -gt 0 ]]; do
     --build)
       BUILD_MODE=1
       shift
+      ;;
+    --image)
+      if [[ $# -lt 2 ]]; then
+        printf '%s\n' "ERROR: --image requires a value (e.g. --image ghcr.io/runclawd/runclawd:v0.1.0)." >&2
+        exit 1
+      fi
+      RUNCLAWD_IMAGE_REF="$2"
+      shift 2
       ;;
     *)
       break
@@ -205,6 +214,15 @@ compose_up() {
   log "Starting services with docker compose..."
   local -a args
   mapfile -t args < <(compose_base_args)
+  if [[ -n "${RUNCLAWD_IMAGE_REF:-}" && $BUILD_MODE -eq 1 ]]; then
+    die "--build cannot be used together with --image."
+  fi
+  if [[ -n "${RUNCLAWD_IMAGE_REF:-}" ]]; then
+    log "Pulling runclawd image ($RUNCLAWD_IMAGE_REF)..."
+    (cd "$INSTALL_DIR" && CF_TUNNEL_TOKEN="${CF_TUNNEL_TOKEN:-}" RUNCLAWD_IMAGE="$RUNCLAWD_IMAGE_REF" $compose "${args[@]}" pull runclawd)
+    (cd "$INSTALL_DIR" && CF_TUNNEL_TOKEN="${CF_TUNNEL_TOKEN:-}" RUNCLAWD_IMAGE="$RUNCLAWD_IMAGE_REF" $compose "${args[@]}" up -d --no-build)
+    return 0
+  fi
   if (( BUILD_MODE )); then
     log "Rebuilding runclawd image (docker compose build runclawd)..."
     (cd "$INSTALL_DIR" && CF_TUNNEL_TOKEN="${CF_TUNNEL_TOKEN:-}" $compose "${args[@]}" build runclawd)

@@ -50,6 +50,7 @@ services:
       EVENTS: 1     # Listen for events (if needed)
 
   runclawd:
+    image: ${RUNCLAWD_IMAGE:-runclawd:local}
     build:
       context: .
       args:
