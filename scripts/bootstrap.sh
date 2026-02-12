@@ -235,4 +235,5 @@ echo "      openclaw onboard"
 echo ""
 echo "=================================================================="
 echo "🔧 Current ulimit is: $(ulimit -n)"
+openclaw doctor --fix
 exec openclaw gateway run
