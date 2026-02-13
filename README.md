@@ -81,6 +81,7 @@
  Data persistence:
  
  - **Persistent volume**: `openclaw-data:/data` (contains OpenClaw state, configs, workspace, shell history, caches, etc.)
+ - **Agent memory**: enhanced via `qmd`.
  
  ## Access URLs
  
