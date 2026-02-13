@@ -72,7 +72,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
   TOKEN=$(openssl rand -hex 24 2>/dev/null || node -e "console.log(require('crypto').randomBytes(24).toString('hex'))")
   cat >"$CONFIG_FILE" <<EOF
 {
-"commands": {
+  "commands": {
     "native": true,
     "nativeSkills": true,
     "text": true,
@@ -96,6 +96,9 @@ if [ ! -f "$CONFIG_FILE" ]; then
       }
     }
   },
+  "memory": {
+    "backend": "qmd"
+  },
   "skills": {
     "allowBundled": [
       "*"
@@ -105,8 +108,8 @@ if [ ! -f "$CONFIG_FILE" ]; then
     }
   },
   "gateway": {
-  "port": $OPENCLAW_GATEWAY_PORT,
-  "mode": "local",
+    "port": $OPENCLAW_GATEWAY_PORT,
+    "mode": "local",
     "bind": "lan",
     "controlUi": {
       "enabled": true,
@@ -119,7 +122,10 @@ if [ ! -f "$CONFIG_FILE" ]; then
       "mode": "off",
       "resetOnExit": false
     },
-    "auth": { "mode": "token", "token": "$TOKEN" }
+    "auth": {
+      "mode": "token",
+      "token": "$TOKEN"
+    }
   },
   "agents": {
     "defaults": {
@@ -140,7 +146,12 @@ if [ ! -f "$CONFIG_FILE" ]; then
       }
     },
     "list": [
-      { "id": "main","default": true, "name": "default",  "workspace": "${OPENCLAW_WORKSPACE:-/data/openclaw-workspace}"}
+      {
+        "id": "main",
+        "default": true,
+        "name": "default",
+        "workspace": "${OPENCLAW_WORKSPACE:-/data/openclaw-workspace}"
+      }
     ]
   }
 }
