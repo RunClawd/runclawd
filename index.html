@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="dark" />
     <title>RunClawd - Production-Ready OpenClaw Deployment</title>
-    <meta name="description" content="Deploy a secure, self-hosted OpenClaw AI agent in seconds. RunClawd provides a production-ready Docker Compose stack with Caddy, Cloudflare Tunnel, and automated backups." />
+    <meta name="description" content="Deploy a secure, self-hosted OpenClaw AI agent in seconds. RunClawd provides a production-ready Docker Compose stack with Caddy and automated backups." />
     <meta name="keywords" content="OpenClaw, Docker Compose, AI Agent, Self-hosted, Deployment, Caddy, Cloudflare Tunnel, RunClawd" />
     <link rel="canonical" href="https://runclawd.sh" />
     <link rel="icon" href="./logo_400x400.jpg" />
@@ -364,6 +364,18 @@
         font-weight: 600;
       }
 
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
+      }
+
       .section-title {
         font-family: var(--display);
         font-size: 24px;
@@ -498,6 +510,7 @@
 
         <!-- Features Section -->
         <section class="features-section" aria-label="Features">
+          <h2 class="sr-only">Features</h2>
           <div class="feature">
             <h3>Opinionated defaults</h3>
             <p>Ships a ready-to-run stack: gateway, web terminal, reverse proxy, optional public tunnel, and persistence.</p>
@@ -518,7 +531,7 @@
         <section class="card codecard" id="install" aria-label="Install">
           <div class="codehead">
             <div>
-              <h3 class="section-title">Install</h3>
+              <h2 class="section-title">Install</h2>
               <div class="section-sub">Linux host. Run as root.</div>
             </div>
             <button class="copy" type="button" data-copy="#cmd">Copy</button>
@@ -622,7 +635,7 @@ bash scripts/backup-cron-install.sh --schedule "0 */6 * * *" --retention-days 30
         <section class="card codecard" id="approval" aria-label="Device Approval">
           <div class="codehead">
             <div>
-              <h3 class="section-title">Device Approval</h3>
+              <h2 class="section-title">Device Approval</h2>
               <div class="section-sub">Required for first access</div>
             </div>
           </div>
