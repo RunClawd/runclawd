@@ -80,7 +80,7 @@
  
  Data persistence:
  
- - **Persistent volume**: `openclaw-data:/data` (contains OpenClaw state, configs, workspace, shell history, caches, etc.)
+ - **Persistent volume**: `runclawd-data:/data` (contains OpenClaw state, configs, workspace, shell history, caches, etc.)
  - **Agent memory**: enhanced via `qmd`.
  
  ## Access URLs
@@ -180,13 +180,58 @@
    ```
  
  - **Disable public tunnel** (keep local-only access)
- 
-   ```bash
-   cd /opt/runclawd
-   docker compose stop cloudflared
-   ```
- 
- - **Upgrade**
+
+  ```bash
+  cd /opt/runclawd
+  docker compose stop cloudflared
+  ```
+
+- **Backup /data volume (runtime + user data)**
+
+  Code/config in this repo should be managed by Git. Backup focuses on runtime and user data in `runclawd-data`.
+
+  ```bash
+  cd /opt/runclawd
+  bash scripts/backup-volume.sh
+  ```
+
+- **Restore /data volume from backup**
+
+  Stop services first, then restore:
+
+  ```bash
+  cd /opt/runclawd
+  docker compose stop runclawd
+  bash scripts/restore-volume.sh --backup-file /opt/backups/runclawd/runclawd-data-YYYY-MM-DD_HHMMSS.tgz
+  docker compose up -d
+  ```
+
+- **Schedule daily backup (cron example)**
+
+  ```bash
+  30 3 * * * cd /opt/runclawd && bash scripts/backup-volume.sh && find /opt/backups/runclawd -name 'runclawd-data-*.tgz' -mtime +14 -delete
+  ```
+
+- **Install/update cron backup automatically**
+
+  ```bash
+  cd /opt/runclawd
+  bash scripts/backup-cron-install.sh
+  ```
+
+  Example with custom schedule/retention:
+
+  ```bash
+  cd /opt/runclawd
+  bash scripts/backup-cron-install.sh --schedule "0 */6 * * *" --retention-days 30
+  ```
+
+  Notes:
+  - `scripts/backup-cron-install.sh` updates one marker-based cron entry idempotently.
+  - `scripts/backup-volume.sh` supports `--volume`, `--backup-dir`, `--archive-name`.
+  - `scripts/restore-volume.sh` supports `--volume`, `--no-wipe`, `--force`.
+
+- **Upgrade**
  
    Re-run the installer (it performs `git pull --rebase` and then starts services):
  
@@ -200,7 +245,7 @@
    ```bash
    cd /opt/runclawd
    docker compose down
-   docker volume rm runclawd_openclaw-data
+   docker volume rm runclawd_runclawd-data runclawd_runclawd-auth
    sudo rm -rf /opt/runclawd
    ```
  

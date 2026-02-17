@@ -532,6 +532,45 @@ sudo --preserve-env=CF_TUNNEL_TOKEN,SERVICE_FQDN_OPENCLAW bash get-runclawd.sh</
 
           <div class="sep"></div>
 
+          <p class="kicker">Backup runtime data (not Git code)</p>
+          <div class="small" style="margin-bottom: 12px">
+            Back up runtime state and user data from <span style="font-family: var(--mono)">runclawd-data:/data</span>.
+          </div>
+          <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
+            <button class="copy" type="button" data-copy="#backup-cmd">Copy</button>
+          </div>
+          <pre><code id="backup-cmd">cd /opt/runclawd
+bash scripts/backup-volume.sh</code></pre>
+
+          <div style="height: 24px"></div>
+
+          <div class="small" style="margin-bottom: 12px">
+            Restore from a backup archive (stop the service first):
+          </div>
+          <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
+            <button class="copy" type="button" data-copy="#restore-cmd">Copy</button>
+          </div>
+          <pre><code id="restore-cmd">cd /opt/runclawd
+docker compose stop runclawd
+bash scripts/restore-volume.sh --backup-file /opt/backups/runclawd/runclawd-data-YYYY-MM-DD_HHMMSS.tgz
+docker compose up -d</code></pre>
+
+          <div style="height: 24px"></div>
+
+          <div class="small" style="margin-bottom: 12px">
+            Install/update a scheduled backup cron job:
+          </div>
+          <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
+            <button class="copy" type="button" data-copy="#cron-cmd">Copy</button>
+          </div>
+          <pre><code id="cron-cmd">cd /opt/runclawd
+bash scripts/backup-cron-install.sh
+
+# Example: every 6 hours, keep 30 days
+bash scripts/backup-cron-install.sh --schedule "0 */6 * * *" --retention-days 30</code></pre>
+
+          <div class="sep"></div>
+
           <p class="kicker">Repository</p>
           <div class="small" style="word-break: break-word">
             <a href="https://github.com/RunClawd/runclawd" rel="noreferrer">https://github.com/RunClawd/runclawd</a>
