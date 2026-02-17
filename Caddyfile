@@ -1,14 +1,16 @@
  :80 {
      route {
-         basic_auth {
-             {$RUNCLAWD_BASIC_AUTH_USER} {$RUNCLAWD_BASIC_AUTH_HASH}
-         }
- 
          handle /term/* {
+             basic_auth {
+                 {$RUNCLAWD_BASIC_AUTH_USER} {$RUNCLAWD_BASIC_AUTH_HASH}
+             }
              reverse_proxy runclawd:7681
          }
  
          handle /openclaw/* {
+             basic_auth {
+                 {$RUNCLAWD_BASIC_AUTH_USER} {$RUNCLAWD_BASIC_AUTH_HASH}
+             }
              reverse_proxy runclawd:7682
          }
  
