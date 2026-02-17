@@ -4,9 +4,49 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="dark" />
-    <title>RunClawd — OpenClaw deployment preset</title>
-    <meta name="description" content="RunClawd is a curated Docker Compose preset repository for OpenClaw, providing an opinionated, production-oriented deployment." />
+    <title>RunClawd - Production-Ready OpenClaw Deployment</title>
+    <meta name="description" content="Deploy a secure, self-hosted OpenClaw AI agent in seconds. RunClawd provides a production-ready Docker Compose stack with Caddy, Cloudflare Tunnel, and automated backups." />
+    <meta name="keywords" content="OpenClaw, Docker Compose, AI Agent, Self-hosted, Deployment, Caddy, Cloudflare Tunnel, RunClawd" />
+    <link rel="canonical" href="https://runclawd.sh" />
     <link rel="icon" href="./logo_400x400.jpg" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://runclawd.sh" />
+    <meta property="og:title" content="RunClawd - Production-Ready OpenClaw Deployment" />
+    <meta property="og:description" content="Deploy a secure, self-hosted OpenClaw AI agent in seconds. RunClawd provides a production-ready Docker Compose stack with Caddy, Cloudflare Tunnel, and automated backups." />
+    <meta property="og:image" content="https://runclawd.sh/logo_400x400.jpg" />
+    <meta property="og:site_name" content="RunClawd" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="RunClawd - Production-Ready OpenClaw Deployment" />
+    <meta name="twitter:description" content="Deploy a secure, self-hosted OpenClaw AI agent in seconds. RunClawd provides a production-ready Docker Compose stack with Caddy, Cloudflare Tunnel, and automated backups." />
+    <meta name="twitter:image" content="https://runclawd.sh/logo_400x400.jpg" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "RunClawd",
+        "operatingSystem": "Linux",
+        "applicationCategory": "DeveloperApplication",
+        "description": "RunClawd is a curated Docker Compose preset repository for OpenClaw, providing an opinionated, production-oriented deployment.",
+        "url": "https://runclawd.sh",
+        "image": "https://runclawd.sh/logo_400x400.jpg",
+        "author": {
+          "@type": "Organization",
+          "name": "RunClawd"
+        },
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
+
     <link href="https://api.fontshare.com/v2/css?f[]=clash-display@700,600,500&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
     <style>
       :root {
@@ -82,12 +122,14 @@
         box-shadow: var(--shadow);
       }
 
-      .brand h1 {
+      .brand h1,
+      .brand .brand-title {
         font-family: var(--display);
         font-weight: 600;
         font-size: 18px;
         margin: 0;
         letter-spacing: 0.2px;
+        color: var(--text);
       }
 
       .brand .sub {
@@ -407,7 +449,7 @@
         <div class="brand" aria-label="RunClawd">
           <img src="./logo_400x400.jpg" class="logo" alt="RunClawd">
           <div>
-            <h1>RunClawd</h1>
+            <div class="brand-title">RunClawd</div>
             <p class="sub">Curated Docker Compose preset for OpenClaw</p>
           </div>
         </div>
@@ -433,10 +475,9 @@
         <section class="hero" aria-label="Hero">
           <div class="hero-content">
             <p class="kicker">OpenClaw deployment preset</p>
-            <h2 class="headline">Run OpenClaw like you mean it.</h2>
+            <h1 class="headline">Deploy OpenClaw in Production</h1>
             <p class="lead">
-              RunClawd is a curated Docker Compose preset repository for OpenClaw. It gives you an opinionated,
-              production-oriented deployment with a one-line installer.
+              Deploy a secure, self-hosted OpenClaw AI agent in seconds. RunClawd provides a production-ready Docker Compose stack with Caddy, Cloudflare Tunnel, and automated backups.
             </p>
 
             <div class="badges" aria-label="Highlights">
