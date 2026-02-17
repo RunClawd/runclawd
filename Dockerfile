@@ -130,11 +130,18 @@ ENV OPENCLAW_BETA=${OPENCLAW_BETA} \
     OPENCLAW_NO_ONBOARD=1 \
     NPM_CONFIG_UNSAFE_PERM=true
 
+# Ensure bun is available in this stage (buildx multi-arch can lose PATH/binary assumptions)
+RUN if [ ! -x /data/.bun/bin/bun ]; then \
+      curl -fsSL https://bun.sh/install | bash; \
+    fi && \
+    /data/.bun/bin/bun --version && \
+    ln -sf /data/.bun/bin/bun /usr/local/bin/bun
+
 # Install Vercel, Marp, QMD with BuildKit cache mount for faster rebuilds
 RUN --mount=type=cache,target=/data/.bun/install/cache \
-    bun install -g vercel @marp-team/marp-cli https://github.com/tobi/qmd && \
-    bun pm -g untrusted && \
-    bun install -g @openai/codex @google/gemini-cli opencode-ai @steipete/summarize @hyperbrowser/agent clawhub
+    /data/.bun/bin/bun install -g vercel @marp-team/marp-cli https://github.com/tobi/qmd && \
+    /data/.bun/bin/bun pm -g untrusted && \
+    /data/.bun/bin/bun install -g @openai/codex @google/gemini-cli opencode-ai @steipete/summarize @hyperbrowser/agent clawhub
 
 # Install OpenClaw with npm cache mount
 RUN --mount=type=cache,target=/data/.npm \
