@@ -25,8 +25,10 @@ jobs:
         include:
           - target: runtime
             suffix: runtime
+            is_default: false
           - target: full
-            suffix: full
+            suffix: ""
+            is_default: true
 
     steps:
       - name: Checkout
@@ -60,11 +62,12 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           flavor: |
-            suffix=-${{ matrix.suffix }}
+            suffix=${{ matrix.suffix && format('-{0}', matrix.suffix) || '' }}
           tags: |
             type=ref,event=branch
             type=ref,event=tag
             type=sha
+            type=raw,value=latest,enable=${{ matrix.is_default }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
