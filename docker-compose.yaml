@@ -33,6 +33,14 @@ services:
         export RUNCLAWD_BASIC_AUTH_USER RUNCLAWD_BASIC_AUTH_HASH
         exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
 
+  explorer:
+    image: coderaiser/cloudcmd
+    restart: unless-stopped
+    expose:
+      - "8000"
+    volumes:
+      - runclawd-data:/root
+
   docker-proxy:
     image: tecnativa/docker-socket-proxy:latest
     restart: unless-stopped

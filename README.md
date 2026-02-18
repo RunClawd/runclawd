@@ -75,6 +75,7 @@
    - `/` -> `runclawd:18789`
    - `/term/*` -> `runclawd:7681`
    - `/openclaw/*` -> `runclawd:7682`
+   - `/explorer/*` -> `explorer:8000` (CloudCmd file explorer)
  - **Public access (optional by default)**: `cloudflared` creates an ephemeral `https://xxxx.trycloudflare.com` tunnel
  - **Docker API hardening**: `docker-proxy` (docker-socket-proxy) exposes only a limited set of Docker APIs to `runclawd`
  

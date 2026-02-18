@@ -1,21 +1,32 @@
  :80 {
-     route {
-         handle /term/* {
-             basic_auth {
-                 {$RUNCLAWD_BASIC_AUTH_USER} {$RUNCLAWD_BASIC_AUTH_HASH}
-             }
-             reverse_proxy runclawd:7681
-         }
- 
-         handle /openclaw/* {
-             basic_auth {
-                 {$RUNCLAWD_BASIC_AUTH_USER} {$RUNCLAWD_BASIC_AUTH_HASH}
-             }
-             reverse_proxy runclawd:7682
-         }
- 
-         handle {
-             reverse_proxy runclawd:18789
-         }
-     }
- }
+    route {
+        handle /term/* {
+            basic_auth {
+                {$RUNCLAWD_BASIC_AUTH_USER} {$RUNCLAWD_BASIC_AUTH_HASH}
+            }
+            reverse_proxy runclawd:7681
+        }
+
+        handle /openclaw/* {
+            basic_auth {
+                {$RUNCLAWD_BASIC_AUTH_USER} {$RUNCLAWD_BASIC_AUTH_HASH}
+            }
+            reverse_proxy runclawd:7682
+        }
+
+        handle /explorer {
+            redir /explorer/ 308
+        }
+
+        handle_path /explorer/* {
+            basic_auth {
+                {$RUNCLAWD_BASIC_AUTH_USER} {$RUNCLAWD_BASIC_AUTH_HASH}
+            }
+            reverse_proxy explorer:8000
+        }
+
+        handle {
+            reverse_proxy runclawd:18789
+        }
+    }
+}
