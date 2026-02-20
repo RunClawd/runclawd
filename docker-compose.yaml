@@ -37,8 +37,8 @@ services:
     image: coderaiser/cloudcmd
     restart: unless-stopped
     environment:
-      - CLOUDCMD_ROOT: /root
-      - CLOUDCMD_PREFIX: /explorer
+      CLOUDCMD_ROOT: /root
+      CLOUDCMD_PREFIX: /explorer
     expose:
       - "8000"
     volumes:
