@@ -9,6 +9,12 @@ log() {
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"
 }
 
+cleanup() {
+  log "🛑 Health Monitor shutting down (received signal)"
+  exit 0
+}
+trap cleanup SIGTERM SIGINT
+
 log "🛡️  Health Monitor Started"
 
 while true; do
