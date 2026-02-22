@@ -1,6 +1,20 @@
 name: Build and Push Docker Images
 
 on:
+  workflow_dispatch:
+    inputs:
+      openclaw_version:
+        description: "OpenClaw npm version (e.g. 1.2.3)"
+        required: false
+        default: "latest"
+      openclaw_beta:
+        description: "Install openclaw@beta instead of version"
+        required: false
+        type: choice
+        options:
+          - "false"
+          - "true"
+        default: "false"
   push:
     branches:
       - main
@@ -79,5 +93,8 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            OPENCLAW_VERSION=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.openclaw_version || vars.OPENCLAW_VERSION || 'latest' }}
+            OPENCLAW_BETA=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.openclaw_beta || vars.OPENCLAW_BETA || 'false' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

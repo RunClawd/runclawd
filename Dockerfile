@@ -129,7 +129,9 @@ FROM runtimes AS dependencies
 
 # OpenClaw install
 ARG OPENCLAW_BETA=false
+ARG OPENCLAW_VERSION=latest
 ENV OPENCLAW_BETA=${OPENCLAW_BETA} \
+    OPENCLAW_VERSION=${OPENCLAW_VERSION} \
     OPENCLAW_NO_ONBOARD=1 \
     NPM_CONFIG_UNSAFE_PERM=true
 
@@ -142,12 +144,14 @@ RUN --mount=type=cache,target=/data/.bun/install/cache \
 # Install OpenClaw with npm cache mount
 RUN --mount=type=cache,target=/data/.npm \
     if [ "$OPENCLAW_BETA" = "true" ]; then \
-    npm install -g openclaw@beta; \
+    OPENCLAW_SPEC="openclaw@beta"; \
     else \
-    npm install -g openclaw; \
+    OPENCLAW_SPEC="openclaw@${OPENCLAW_VERSION}"; \
     fi && \
+    npm install -g "$OPENCLAW_SPEC" && \
     if command -v openclaw >/dev/null 2>&1; then \
     echo "✅ openclaw binary found"; \
+    openclaw --version; \
     else \
     echo "❌ OpenClaw install failed (binary 'openclaw' not found)"; \
     exit 1; \
@@ -205,18 +209,22 @@ RUN install -m 0755 -d /etc/apt/keyrings && \
     rm -rf /var/lib/apt/lists/*
 
 ARG OPENCLAW_BETA=false
+ARG OPENCLAW_VERSION=latest
 ENV OPENCLAW_BETA=${OPENCLAW_BETA} \
+    OPENCLAW_VERSION=${OPENCLAW_VERSION} \
     OPENCLAW_NO_ONBOARD=1 \
     NPM_CONFIG_UNSAFE_PERM=true
 
 RUN --mount=type=cache,target=/data/.npm \
     if [ "$OPENCLAW_BETA" = "true" ]; then \
-    npm install -g openclaw@beta; \
+    OPENCLAW_SPEC="openclaw@beta"; \
     else \
-    npm install -g openclaw; \
+    OPENCLAW_SPEC="openclaw@${OPENCLAW_VERSION}"; \
     fi && \
+    npm install -g "$OPENCLAW_SPEC" && \
     if command -v openclaw >/dev/null 2>&1; then \
     echo "✅ openclaw binary found"; \
+    openclaw --version; \
     else \
     echo "❌ OpenClaw install failed (binary 'openclaw' not found)"; \
     exit 1; \
