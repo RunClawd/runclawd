@@ -30,8 +30,9 @@ for id in $SANDBOX_IDS; do
   # Check if docker container exists
   if ! docker ps -a --format '{{.Names}}' | grep -q "^$id$"; then
     log "⚠️  Container $id not found in Docker. Marking as lost/stopped in state."
-    # Update state to valid 'stopped' if it was 'running'
-    # Implementation detail: would need a tool to update json file in place (e.g. temporary file)
+    # Update state to 'stopped' using jq with a temp file for atomic write
+    TMP_STATE=$(mktemp)
+    jq --arg id "$id" '.sandboxes[$id].status = "stopped"' "$STATE_FILE" > "$TMP_STATE" && mv "$TMP_STATE" "$STATE_FILE"
     continue
   fi
 

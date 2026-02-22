@@ -103,7 +103,9 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       KIMI_API_KEY: ${KIMI_API_KEY}
       OPENCODE_API_KEY: ${OPENCODE_API_KEY}
-      MOONSHOT_API_KEY: ${KIMI_API_KEY}
+      # MOONSHOT_API_KEY is the official API name for Kimi/Moonshot AI.
+      # Falls back to KIMI_API_KEY for backward compatibility. Set MOONSHOT_API_KEY in .env to override.
+      MOONSHOT_API_KEY: ${MOONSHOT_API_KEY:-${KIMI_API_KEY}}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       SANDBOX_CONTAINER: ${SANDBOX_CONTAINER:-false}
       
@@ -115,6 +117,8 @@ services:
       # Bootstrap controls
       OPENCLAW_AUTO_BOOTSTRAP: "1"
       OPENCLAW_PRINT_ACCESS: "1"
+      # ⚠️  WARNING: '*' trusts ALL proxies — client IP spoofing is possible.
+      # In production, restrict to your actual proxy IPs (e.g. '172.18.0.0/16').
       GATEWAY_TRUSTED_PROXIES: '*'
       # Fix for EMFILE/Inotify issues in Docker
       CHOKIDAR_USEPOLLING: "true"
