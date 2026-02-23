@@ -96,9 +96,6 @@ if [ ! -f "$CONFIG_FILE" ]; then
       }
     }
   },
-  "memory": {
-    "backend": "qmd"
-  },
   "skills": {
     "allowBundled": [
       "*"
