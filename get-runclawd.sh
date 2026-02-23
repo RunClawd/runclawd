@@ -18,6 +18,7 @@ if [[ "${RUNCLAWD_LOCAL:-}" = "1" ]]; then
   LOCAL_MODE=1
 fi
 BUILD_MODE=0
+NO_PULL=0
 RUNCLAWD_IMAGE_REF="${RUNCLAWD_IMAGE:-}"
 
 while [[ $# -gt 0 ]]; do
@@ -28,6 +29,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --build)
       BUILD_MODE=1
+      shift
+      ;;
+    --no-pull)
+      NO_PULL=1
       shift
       ;;
     --image)
@@ -218,8 +223,12 @@ compose_up() {
     die "--build cannot be used together with --image."
   fi
   if [[ -n "${RUNCLAWD_IMAGE_REF:-}" ]]; then
-    log "Pulling runclawd image ($RUNCLAWD_IMAGE_REF)..."
-    (cd "$INSTALL_DIR" && CF_TUNNEL_TOKEN="${CF_TUNNEL_TOKEN:-}" RUNCLAWD_IMAGE="$RUNCLAWD_IMAGE_REF" $compose "${args[@]}" pull runclawd)
+    if (( NO_PULL )); then
+      log "--no-pull is set, skipping image pull and using local runclawd image ($RUNCLAWD_IMAGE_REF) if available."
+    else
+      log "Pulling runclawd image ($RUNCLAWD_IMAGE_REF)..."
+      (cd "$INSTALL_DIR" && CF_TUNNEL_TOKEN="${CF_TUNNEL_TOKEN:-}" RUNCLAWD_IMAGE="$RUNCLAWD_IMAGE_REF" $compose "${args[@]}" pull runclawd)
+    fi
     (cd "$INSTALL_DIR" && CF_TUNNEL_TOKEN="${CF_TUNNEL_TOKEN:-}" RUNCLAWD_IMAGE="$RUNCLAWD_IMAGE_REF" $compose "${args[@]}" up -d --no-build)
     return 0
   fi
