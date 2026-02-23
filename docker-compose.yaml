@@ -37,12 +37,16 @@ services:
     image: coderaiser/cloudcmd
     restart: unless-stopped
     environment:
-      CLOUDCMD_ROOT: /root
+      CLOUDCMD_ROOT: /data
       CLOUDCMD_PREFIX: /explorer/
     expose:
       - "8000"
     volumes:
-      - runclawd-data:/root
+      - type: volume
+        source: runclawd-data
+        target: /data
+        volume:
+          nocopy: true
 
   docker-proxy:
     image: tecnativa/docker-socket-proxy:latest
