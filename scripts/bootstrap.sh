@@ -75,14 +75,14 @@ if [ ! -f "$CONFIG_FILE" ]; then
   MODELS_PROVIDER_JSON=""
   if [ -n "$OPENAI_API_KEY" ]; then
     AGENT_MODEL_JSON='      "model": {
-        "primary": "openclawai/gpt-5.2"
+        "primary": "runclawd/gpt-5.2"
       },'
 
     MODELS_PROVIDER_JSON=$(cat <<EOF
 ,
   "models": {
     "providers": {
-      "openclawai": {
+      "runclawd": {
         "baseUrl": "${OPENAI_API_BASE_URL}",
         "apiKey": "${OPENAI_API_KEY}",
         "api": "openai-completions",
