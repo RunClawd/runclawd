@@ -70,6 +70,36 @@ seed_agent "main" "OpenClaw"
 if [ ! -f "$CONFIG_FILE" ]; then
   echo "🏥 Generating openclaw.json with Prime Directive..."
   TOKEN=$(openssl rand -hex 24 2>/dev/null || node -e "console.log(require('crypto').randomBytes(24).toString('hex'))")
+
+  AGENT_MODEL_JSON=""
+  MODELS_PROVIDER_JSON=""
+  if [ -n "$OPENAI_API_KEY" ]; then
+    AGENT_MODEL_JSON='      "model": {
+        "primary": "openclawai/gpt-5.2"
+      },'
+
+    MODELS_PROVIDER_JSON=$(cat <<EOF
+,
+  "models": {
+    "providers": {
+      "openclawai": {
+        "baseUrl": "${OPENAI_API_BASE_URL}",
+        "apiKey": "${OPENAI_API_KEY}",
+        "api": "openai-completions",
+        "models": [
+          { "id": "gpt-5.2", "name": "GPT-5.2" },
+          { "id": "gpt-5.3-codex", "name": "GPT-5.3 Codex" },
+          { "id": "claude-sonnet-4-5-20250929", "name": "Claude Sonnet 4.5" },
+          { "id": "claude-opus-4-6", "name": "Claude Opus 4.6" },
+          { "id": "gemini-3-pro-preview", "name": "Gemini 3 Pro" }
+        ]
+      }
+    }
+  }
+EOF
+)
+  fi
+
   cat >"$CONFIG_FILE" <<EOF
 {
   "commands": {
@@ -129,6 +159,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
       "workspace": "$WORKSPACE_DIR",
       "envelopeTimestamp": "on",
       "envelopeElapsed": "on",
+${AGENT_MODEL_JSON}
       "cliBackends": {},
       "heartbeat": {
         "every": "1h"
@@ -151,6 +182,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
       }
     ]
   }
+$MODELS_PROVIDER_JSON
 }
 EOF
 fi
