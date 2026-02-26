@@ -120,9 +120,6 @@ EOF
       },
       "telegram": {
         "enabled": true
-      },
-      "google-antigravity-auth": {
-        "enabled": true
       }
     }
   },
@@ -140,7 +137,8 @@ EOF
     "bind": "lan",
     "controlUi": {
       "enabled": true,
-      "allowInsecureAuth": true
+      "allowInsecureAuth": true,
+      "dangerouslyAllowHostHeaderOriginFallback": true
     },
     "trustedProxies": [
       "*"
