@@ -164,7 +164,7 @@ ${AGENT_MODEL_JSON}
       },
       "maxConcurrent": 4,
       "sandbox": {
-        "mode": "non-main",
+        "mode": "off",
         "scope": "session",
         "browser": {
           "enabled": true
