@@ -114,8 +114,11 @@ RUN curl -fsSL https://bun.sh/install | bash
 RUN bun install -g node-gyp
 
 # Python tools
-RUN pip3 install ipython csvkit openpyxl python-docx pypdf botasaurus browser-use playwright --break-system-packages && \
+RUN python3 -m venv /opt/venv && \
+    /opt/venv/bin/pip install ipython csvkit openpyxl python-docx pypdf botasaurus browser-use playwright && \
     playwright install-deps
+
+ENV PATH="/opt/venv/bin:$PATH"
 
 # Configure QMD Persistence
 ENV XDG_CACHE_HOME="/data/.cache"

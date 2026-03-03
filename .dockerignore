@@ -1,0 +1,8 @@
+.git
+*.md
+!SOUL.md
+!BOOTSTRAP.md
+.env
+logo_400x400.jpg
+cloudflared/
+.github/
