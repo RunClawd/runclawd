@@ -75,7 +75,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
   MODELS_PROVIDER_JSON=""
   if [ -n "$OPENAI_API_KEY" ]; then
     AGENT_MODEL_JSON='      "model": {
-        "primary": "runclawd/gpt-5.2"
+        "primary": "runclawd/gpt-5.4"
       },'
 
     MODELS_PROVIDER_JSON=$(cat <<EOF
@@ -87,7 +87,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
         "apiKey": "${OPENAI_API_KEY}",
         "api": "openai-completions",
         "models": [
-          { "id": "gpt-5.2", "name": "GPT-5.2" },
+          { "id": "gpt-5.4", "name": "GPT-5.4" },
           { "id": "gpt-5.3-codex", "name": "GPT-5.3 Codex" },
           { "id": "claude-sonnet-4-5-20250929", "name": "Claude Sonnet 4.5" },
           { "id": "claude-opus-4-6", "name": "Claude Opus 4.6" },
@@ -115,9 +115,6 @@ EOF
   "plugins": {
     "enabled": true,
     "entries": {
-      "whatsapp": {
-        "enabled": true
-      },
       "telegram": {
         "enabled": true
       }
@@ -151,6 +148,9 @@ EOF
       "mode": "token",
       "token": "$TOKEN"
     }
+  },
+  "tools": {
+    "profile": "full"
   },
   "agents": {
     "defaults": {
