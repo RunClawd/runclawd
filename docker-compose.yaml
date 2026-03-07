@@ -38,15 +38,53 @@ services:
     restart: unless-stopped
     environment:
       CLOUDCMD_ROOT: /data
-      CLOUDCMD_PREFIX: /explorer/
+      CLOUDCMD_PREFIX: /explorer
     expose:
       - "8000"
     volumes:
       - type: volume
         source: runclawd-data
-        target: /data
+        target: /data/runclawd
         volume:
           nocopy: true
+      - type: volume
+        source: browserless-data
+        target: /data/browserless
+        volume:
+          nocopy: true
+
+  browserless:
+    image: browserless/chrome:latest
+    restart: unless-stopped
+    expose:
+      - "3000"
+    # Important for Chrome rendering stability on small VPS instances
+    shm_size: '2gb'
+    volumes:
+      # Persist userDataDir and browser workspace
+      - browserless-data:/usr/src/app/data
+    environment:
+      # Tuned for 8GB VPS
+      - MAX_CONCURRENT_SESSIONS=4
+      - MAX_QUEUE_COUNT=16
+      - PRE_BOOT_CHROME=true
+      - CONNECTION_TIMEOUT=900000
+
+      # Node.js memory cap for Browserless process
+      - NODE_OPTIONS=--max-old-space-size=1024
+
+      # Feature flags
+      - ENABLE_DEBUGGER=true
+      - ENABLE_UI=true
+      - WORKSPACE_DIR=/usr/src/app/data/workspace
+
+      # Optional security token
+      # - TOKEN=your_secure_token
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
 
   docker-proxy:
     image: tecnativa/docker-socket-proxy:latest
@@ -147,3 +185,4 @@ services:
 volumes:
   runclawd-data:
   runclawd-auth:
+  browserless-data:

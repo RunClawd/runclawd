@@ -18,11 +18,22 @@
             redir /explorer/ 308
         }
 
-        handle_path /explorer/* {
+        handle /explorer/* {
             basic_auth {
                 {$RUNCLAWD_BASIC_AUTH_USER} {$RUNCLAWD_BASIC_AUTH_HASH}
             }
             reverse_proxy explorer:8000
+        }
+
+        handle /browserless {
+            redir /browserless/ 308
+        }
+
+        handle_path /browserless/* {
+            basic_auth {
+                {$RUNCLAWD_BASIC_AUTH_USER} {$RUNCLAWD_BASIC_AUTH_HASH}
+            }
+            reverse_proxy browserless:3000
         }
 
         handle {

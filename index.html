@@ -576,11 +576,16 @@ sudo --preserve-env=CF_TUNNEL_TOKEN,SERVICE_FQDN_OPENCLAW bash get-runclawd.sh</
               - Web terminal (ttyd)
               <br />
               - Caddy reverse proxy routes: <span style="font-family: var(--mono)">/</span>,
-              <span style="font-family: var(--mono)">/term/</span>, <span style="font-family: var(--mono)">/openclaw/</span>
+              <span style="font-family: var(--mono)">/term/</span>, <span style="font-family: var(--mono)">/openclaw/</span>,
+              <span style="font-family: var(--mono)">/explorer/</span>, <span style="font-family: var(--mono)">/browserless/</span>
+              <br />
+              - CloudCmd mounts <span style="font-family: var(--mono)">runclawd-data</span> and <span style="font-family: var(--mono)">browserless-data</span> under <span style="font-family: var(--mono)">/data</span>
+              <br />
+              - Browserless is exposed via Caddy route <span style="font-family: var(--mono)">/browserless/</span> (service remains internal)
               <br />
               - Optional ephemeral public access via Cloudflare Tunnel
               <br />
-              - Persistent volume for OpenClaw state and workspace
+              - Persistent volumes for OpenClaw and Browserless runtime data
             </div>
           </div>
 
