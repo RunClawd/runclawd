@@ -269,3 +269,154 @@
  - **Access control**:
    - Gateway UI requires a token (`auth.mode=token`, generated on first boot).
    - All HTTP endpoints (gateway + terminals) are protected by **Caddy HTTP Basic Auth** (`runclawd:<generated password>`).
+
+## Migrate from Docker to Native Installation
+
+This guide helps you migrate OpenClaw from a Docker environment to a native OS installation.
+
+### Prerequisites
+
+- Existing Docker-based OpenClaw installation
+- Target machine with Node.js 18+ and npm installed
+
+### Step 1: Backup Data
+
+On the source machine (Docker environment):
+
+```bash
+# List running containers
+docker ps
+
+# Note the runclawd container ID
+CONTAINER_ID="your_container_id"
+
+# Stop the runclawd container (keep other services running)
+docker compose stop runclawd
+
+# Backup critical data directories
+docker cp $CONTAINER_ID:/data/.openclaw ./openclaw-config
+docker cp $CONTAINER_ID:/data/openclaw-workspace ./openclaw-workspace
+
+# Transfer backup directories to target machine
+# Example using scp:
+scp -r openclaw-config openclaw-workspace user@target-host:/tmp/
+```
+
+### Step 2: Install OpenClaw
+
+On the target machine:
+
+```bash
+# Install OpenClaw (don't run onboarding yet)
+npm install -g openclaw
+
+# Restore backup data
+# Docker paths => Native paths
+# /data/.openclaw => ~/.openclaw
+# /data/openclaw-workspace => ~/.openclaw/workspace
+
+mv /tmp/openclaw-config ~/.openclaw
+mv /tmp/openclaw-workspace ~/.openclaw/workspace
+
+# Update paths in configuration file
+sed -i 's|/data/.openclaw|~/.openclaw|g' ~/.openclaw/openclaw.json
+sed -i 's|/data/openclaw-workspace|~/.openclaw/workspace|g' ~/.openclaw/openclaw.json
+```
+
+### Step 3: Complete Installation
+
+```bash
+# Run onboarding
+openclaw onboarding
+
+# Start the service
+openclaw start
+```
+
+**If you encounter permission errors:**
+
+```
+Agent failed before reply: EACCES: permission denied, mkdir '/data/.openclaw'
+```
+
+Run the following command to clean up old sessions (long-term memory will be preserved):
+
+```bash
+openclaw sessions cleanup \
+  --store "~/.openclaw/agents/main/sessions/sessions.json" \
+  --enforce \
+  --fix-missing
+```
+
+### Step 4: Network Security Configuration
+
+#### 4.1 Restrict Local Access
+
+Edit `~/.openclaw/openclaw.json` and modify the gateway configuration:
+
+```json
+{
+  "gateway": {
+    "port": 18789,
+    "mode": "local",
+    "bind": "loopback",
+    "controlUi": {
+      "enabled": true,
+      "dangerouslyAllowHostHeaderOriginFallback": true,
+      "allowInsecureAuth": true
+    }
+  }
+}
+```
+
+#### 4.2 Configure Firewall
+
+```bash
+# Allow SSH
+sudo ufw allow ssh
+
+# Block external access to OpenClaw port
+sudo ufw deny 18789/tcp
+
+# Enable firewall
+sudo ufw enable
+```
+
+#### 4.3 Secure Access Methods
+
+Choose one of the following access methods:
+
+**Option 1: SSH Tunneling (Recommended)**
+
+```bash
+ssh -L 18789:localhost:18789 user@your-server
+# Then access http://localhost:18789 in your local browser
+```
+
+**Option 2: Cloudflare Tunnel**
+
+Refer to [Cloudflare Tunnel documentation](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/get-started/) to configure a secure tunnel.
+
+### Verify Migration
+
+```bash
+# Check service status
+openclaw status
+
+# View logs
+openclaw logs --follow
+
+# Test messaging
+# Send a test message through your configured channel (Feishu, Telegram, etc.)
+```
+
+### Troubleshooting
+
+**Q: Lost conversation history after migration?**  
+A: Conversation history is stored in session files. Cleaning old sessions removes them. Long-term memory (MEMORY.md) and workspace files are preserved.
+
+**Q: Can't find configuration file?**  
+A: Ensure `~/.openclaw/openclaw.json` exists and paths are correct.
+
+**Q: Permission errors?**  
+A: Run `chmod -R 755 ~/.openclaw` to fix permissions.
