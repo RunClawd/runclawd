@@ -80,6 +80,10 @@ services:
       - ENABLE_UI=true
       - WORKSPACE_DIR=/usr/src/app/data/workspace
 
+      - DEFAULT_HEADLESS=false
+      - DEFAULT_STEALTH=true
+      - DEFAULT_USER_DATA_DIR=/usr/src/app/data/account_1
+
       # Optional security token
       # - TOKEN=your_secure_token
     deploy:
