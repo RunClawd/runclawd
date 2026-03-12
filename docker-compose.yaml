@@ -36,7 +36,7 @@ services:
   explorer:
     image: coderaiser/cloudcmd
     restart: unless-stopped
-    user: "1000:1000"
+    user: "0:0"
     environment:
       CLOUDCMD_ROOT: /data
       CLOUDCMD_PREFIX: /explorer
@@ -57,7 +57,7 @@ services:
   browserless:
     image: browserless/chrome:latest
     restart: unless-stopped
-    user: "1000:1000"
+    user: "0:0"
     expose:
       - "3000"
     # Important for Chrome rendering stability on small VPS instances
@@ -83,6 +83,7 @@ services:
       - DEFAULT_HEADLESS=false
       - DEFAULT_STEALTH=true
       - DEFAULT_USER_DATA_DIR=/usr/src/app/data/account_1
+      - DEFAULT_LAUNCH_ARGS="--disable-blink-features=AutomationControlled"
 
       # Optional security token
       # - TOKEN=your_secure_token
