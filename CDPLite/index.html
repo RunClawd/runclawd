@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lite Screencast</title>
+    <style>
+        body { margin: 0; background: #222; display: flex; flex-direction: column; align-items: center; }
+        #view { max-width: 100%; cursor: crosshair; border: 2px solid #444; }
+        .controls { color: white; padding: 10px; font-family: sans-serif; }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <input type="text" id="wsUrl" placeholder="ws://localhost:3000/..." style="width: 400px;">
+        <button onclick="connect()">Cast Browser Window</button>
+    </div>
+    <img id="view">
+
+    <script>
+        let ws;
+        let contentWidth = 0, contentHeight = 0;
+        const view = document.getElementById('view');
+
+        (function initFromQuery() {
+            const params = new URLSearchParams(location.search);
+            let url = '';
+            if (params.has('wss')) url = 'wss://' + params.get('wss');
+            else if (params.has('ws')) url = 'ws://' + params.get('ws');
+            if (url) {
+                document.getElementById('wsUrl').value = url;
+                connect();
+            }
+        })();
+
+        function connect() {
+            const url = document.getElementById('wsUrl').value;
+            ws = new WebSocket(url);
+
+            ws.onopen = () => {
+                // 1. 开启 Page 域
+                ws.send(JSON.stringify({ id: 1, method: "Page.enable" }));
+                // 2. 开始投屏
+                ws.send(JSON.stringify({
+                    id: 2,
+                    method: "Page.startScreencast",
+                    params: { format: "jpeg", quality: 60 }
+                }));
+            };
+
+            ws.onmessage = (msg) => {
+                const response = JSON.parse(msg.data);
+                
+                // 3. 处理每一帧
+                if (response.method === "Page.screencastFrame") {
+                    const { data, metadata, sessionId } = response.params;
+                    view.src = "data:image/jpeg;base64," + data;
+                    if (metadata) { contentWidth = metadata.deviceWidth; contentHeight = metadata.deviceHeight; }
+
+                    // 4. 必须发送 Ack，否则投屏会停止
+                    ws.send(JSON.stringify({
+                        method: "Page.screencastFrameAck",
+                        params: { sessionId: sessionId }
+                    }));
+                }
+            };
+        }
+
+        // 5. 进阶：实现简单的远程点击
+        view.onclick = (e) => {
+            if (!ws) return;
+            const rect = view.getBoundingClientRect();
+            const scaleX = contentWidth  ? contentWidth  / rect.width  : 1;
+            const scaleY = contentHeight ? contentHeight / rect.height : 1;
+            const x = Math.round((e.clientX - rect.left) * scaleX);
+            const y = Math.round((e.clientY - rect.top)  * scaleY);
+
+            const clickEvent = (type) => JSON.stringify({
+                method: "Input.dispatchMouseEvent",
+                params: { type, x, y, button: 'left', clickCount: 1 }
+            });
+
+            ws.send(clickEvent("mousePressed"));
+            ws.send(clickEvent("mouseReleased"));
+        };
+    </script>
+</body>
+</html>

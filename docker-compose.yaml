@@ -9,6 +9,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./CDPLite:/srv/cdplite:ro
       - runclawd-auth:/runclawd
     command:
       - sh

@@ -25,6 +25,15 @@
             reverse_proxy explorer:8000
         }
 
+        handle /cdplite {
+            basic_auth {
+                {$RUNCLAWD_BASIC_AUTH_USER} {$RUNCLAWD_BASIC_AUTH_HASH}
+            }
+            root * /srv/cdplite
+            rewrite * /index.html
+            file_server
+        }
+
         handle /browserless {
             redir /browserless/ 308
         }
