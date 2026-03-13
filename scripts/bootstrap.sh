@@ -87,11 +87,11 @@ if [ ! -f "$CONFIG_FILE" ]; then
         "apiKey": "${OPENAI_API_KEY}",
         "api": "openai-completions",
         "models": [
-          { "id": "gpt-5.4", "name": "GPT-5.4" },
-          { "id": "gpt-5.3-codex", "name": "GPT-5.3 Codex" },
-          { "id": "claude-sonnet-4-6", "name": "Claude Sonnet 4.6" },
-          { "id": "claude-opus-4-6", "name": "Claude Opus 4.6" },
-          { "id": "gemini-3.1-pro-preview", "name": "Gemini 3.1 Pro" }
+          { "id": "gpt-5.4", "name": "GPT-5.4", "contextWindow": 1050000, "maxTokens": 128000 },
+          { "id": "gpt-5.3-codex", "name": "GPT-5.3 Codex", "contextWindow": 400000, "maxTokens": 128000 },
+          { "id": "claude-sonnet-4-6", "name": "Claude Sonnet 4.6", "contextWindow": 200000, "maxTokens": 64000 },
+          { "id": "claude-opus-4-6", "name": "Claude Opus 4.6", "contextWindow": 1000000, "maxTokens": 128000 },
+          { "id": "gemini-3.1-pro-preview", "name": "Gemini 3.1 Pro", "contextWindow": 1048576, "maxTokens": 65535 }
         ]
       }
     }
