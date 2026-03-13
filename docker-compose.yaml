@@ -56,6 +56,7 @@ services:
           nocopy: true
 
   browserless:
+    hostname: runclawd-browserless
     image: browserless/chrome:latest
     restart: unless-stopped
     user: "0:0"
@@ -68,8 +69,8 @@ services:
       - browserless-data:/usr/src/app/data
     environment:
       # Tuned for 8GB VPS
-      - MAX_CONCURRENT_SESSIONS=4
-      - MAX_QUEUE_COUNT=16
+      - MAX_CONCURRENT_SESSIONS=1
+      - MAX_QUEUE_COUNT=4
       - PRE_BOOT_CHROME=true
       - CONNECTION_TIMEOUT=900000
 

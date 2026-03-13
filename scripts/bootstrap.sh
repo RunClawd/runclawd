@@ -135,7 +135,8 @@ EOF
     "controlUi": {
       "enabled": true,
       "allowInsecureAuth": true,
-      "dangerouslyAllowHostHeaderOriginFallback": true
+      "dangerouslyAllowHostHeaderOriginFallback": true,
+      "allowOrigin": "*"
     },
     "trustedProxies": [
       "*"
@@ -176,7 +177,7 @@ ${AGENT_MODEL_JSON}
         "remote": {
           "baseUrl": "${OPENAI_API_BASE_URL}",
           "apiKey": "${OPENAI_API_KEY}"
-        }
+        },
         "store": {
           "vector": {
             "enabled": true
