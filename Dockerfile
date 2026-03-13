@@ -37,6 +37,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip \
     && rm -rf /var/lib/apt/lists/*
 
+# Install Docker CE CLI (Latest) to support API 1.44+
+RUN install -m 0755 -d /etc/apt/keyrings && \
+    curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc && \
+    chmod a+r /etc/apt/keyrings/docker.asc && \
+    echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
+    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+    tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+    apt-get update && \
+    apt-get install -y docker-ce-cli && \
+    rm -rf /var/lib/apt/lists/*
+
 # Install ttyd (web terminal)
 RUN set -eux; \
     apt-get update; \
@@ -56,18 +68,6 @@ RUN set -eux; \
 
 # Stage 2: System CLI tools (change occasionally)
 FROM base AS system-tools
-
-# Install Docker CE CLI (Latest) to support API 1.44+
-RUN install -m 0755 -d /etc/apt/keyrings && \
-    curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc && \
-    chmod a+r /etc/apt/keyrings/docker.asc && \
-    echo \
-    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
-    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-    tee /etc/apt/sources.list.d/docker.list > /dev/null && \
-    apt-get update && \
-    apt-get install -y docker-ce-cli && \
-    rm -rf /var/lib/apt/lists/*
 
 # Install Go (Latest)
 ARG GO_VERSION=1.23.4
@@ -114,8 +114,7 @@ RUN curl -fsSL https://bun.sh/install | bash
 RUN bun install -g node-gyp
 
 # Python tools
-RUN pip3 install ipython csvkit openpyxl python-docx pypdf botasaurus browser-use playwright --break-system-packages && \
-    playwright install-deps
+RUN pip3 install ipython csvkit openpyxl python-docx pypdf botasaurus browser-use playwright --break-system-packages
 
 # Configure QMD Persistence
 ENV XDG_CACHE_HOME="/data/.cache"
@@ -133,16 +132,21 @@ ARG OPENCLAW_VERSION=latest
 ENV OPENCLAW_BETA=${OPENCLAW_BETA} \
     OPENCLAW_VERSION=${OPENCLAW_VERSION} \
     OPENCLAW_NO_ONBOARD=1 \
-    NPM_CONFIG_UNSAFE_PERM=true
+    NPM_CONFIG_UNSAFE_PERM=true \
+    BUN_INSTALL_CACHE_DIR=/data/.bun/install/cache \
+    NPM_CONFIG_CACHE=/data/.npm
 
-# Install Vercel, Marp, QMD with BuildKit cache mount for faster rebuilds
-RUN --mount=type=cache,target=/data/.bun/install/cache \
-    bun install -g vercel @marp-team/marp-cli @tobilu/qmd && hash -r && \
-    bun pm -g untrusted && \
-    bun install -g @openai/codex @google/gemini-cli opencode-ai @steipete/summarize @hyperbrowser/agent clawhub
+# Install stable authoring/deploy CLIs (changes less frequently)
+RUN --mount=type=cache,id=bun-install-cache,target=/data/.bun/install/cache,sharing=locked \
+    bun install -g vercel @marp-team/marp-cli @tobilu/qmd
+
+# Install AI CLIs (changes more frequently) in a separate cacheable layer
+RUN --mount=type=cache,id=bun-install-cache,target=/data/.bun/install/cache,sharing=locked \
+    bun install -g @openai/codex @google/gemini-cli opencode-ai @steipete/summarize agent-browser clawhub && \
+    bun pm -g untrusted
 
 # Install OpenClaw with npm cache mount
-RUN --mount=type=cache,target=/data/.npm \
+RUN --mount=type=cache,id=npm-cache,target=/data/.npm,sharing=locked \
     if [ "$OPENCLAW_BETA" = "true" ]; then \
     OPENCLAW_SPEC="openclaw@beta"; \
     else \
@@ -197,17 +201,6 @@ RUN set -eux; \
       curl -fsSL "https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.${TTYD_ARCH}" -o /usr/local/bin/ttyd; \
       chmod +x /usr/local/bin/ttyd; \
     fi
-
-RUN install -m 0755 -d /etc/apt/keyrings && \
-    curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc && \
-    chmod a+r /etc/apt/keyrings/docker.asc && \
-    echo \
-    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
-    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-    tee /etc/apt/sources.list.d/docker.list > /dev/null && \
-    apt-get update && \
-    apt-get install -y docker-ce-cli && \
-    rm -rf /var/lib/apt/lists/*
 
 ARG OPENCLAW_BETA=false
 ARG OPENCLAW_VERSION=latest
