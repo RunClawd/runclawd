@@ -5,20 +5,41 @@
     <style>
         body { margin: 0; background: #222; display: flex; flex-direction: column; align-items: center; }
         #view { max-width: 100%; cursor: crosshair; border: 2px solid #444; }
-        .controls { color: white; padding: 10px; font-family: sans-serif; }
+        .controls { color: white; padding: 10px; font-family: sans-serif; display: flex; align-items: center; gap: 8px; }
+        #status { font-size: 12px; color: #aaa; }
+        #status.connected { color: #4c4; }
+        #status.error { color: #f66; }
     </style>
 </head>
 <body>
     <div class="controls">
         <input type="text" id="wsUrl" placeholder="ws://localhost:3000/..." style="width: 400px;">
         <button onclick="connect()">Cast Browser Window</button>
+        <span id="status">disconnected</span>
     </div>
     <img id="view">
 
     <script>
         let ws;
         let contentWidth = 0, contentHeight = 0;
-        const view = document.getElementById('view');
+        let isComposing = false;
+        const view   = document.getElementById('view');
+        const status = document.getElementById('status');
+
+        // 隐藏 input：专门用于接收键盘 / IME 输入，不影响页面布局
+        const keyInput = document.createElement('input');
+        keyInput.type = 'text';
+        keyInput.style.cssText = 'position:fixed;opacity:0;width:1px;height:1px;top:0;left:0;pointer-events:none;';
+        document.body.appendChild(keyInput);
+
+        function setStatus(s) {
+            status.textContent = s;
+            status.className = s;
+        }
+
+        function send(obj) {
+            if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify(obj));
+        }
 
         (function initFromQuery() {
             const params = new URLSearchParams(location.search);
@@ -32,55 +53,90 @@
         })();
 
         function connect() {
+            // 防止重复连接
+            if (ws) { ws.onclose = null; ws.close(); }
             const url = document.getElementById('wsUrl').value;
+            setStatus('connecting…');
             ws = new WebSocket(url);
 
             ws.onopen = () => {
+                setStatus('connected');
                 // 1. 开启 Page 域
-                ws.send(JSON.stringify({ id: 1, method: "Page.enable" }));
+                send({ id: 1, method: "Page.enable" });
                 // 2. 开始投屏
-                ws.send(JSON.stringify({
-                    id: 2,
-                    method: "Page.startScreencast",
-                    params: { format: "jpeg", quality: 60 }
-                }));
+                send({ id: 2, method: "Page.startScreencast", params: { format: "jpeg", quality: 60, maxWidth: 1280 } });
             };
 
             ws.onmessage = (msg) => {
                 const response = JSON.parse(msg.data);
-                
                 // 3. 处理每一帧
                 if (response.method === "Page.screencastFrame") {
                     const { data, metadata, sessionId } = response.params;
-                    view.src = "data:image/jpeg;base64," + data;
                     if (metadata) { contentWidth = metadata.deviceWidth; contentHeight = metadata.deviceHeight; }
-
-                    // 4. 必须发送 Ack，否则投屏会停止
-                    ws.send(JSON.stringify({
-                        method: "Page.screencastFrameAck",
-                        params: { sessionId: sessionId }
-                    }));
+                    // 4. 图片渲染完成后再 Ack，避免帧堆积
+                    view.onload = () => {
+                        view.onload = null;
+                        send({ method: "Page.screencastFrameAck", params: { sessionId } });
+                    };
+                    view.src = "data:image/jpeg;base64," + data;
                 }
             };
+
+            ws.onclose = () => setStatus('disconnected');
+            ws.onerror = () => setStatus('error');
         }
 
-        // 5. 进阶：实现简单的远程点击
+        // --- 鼠标点击（坐标缩放） ---
         view.onclick = (e) => {
-            if (!ws) return;
+            keyInput.focus(); // 点击画面后把焦点交给隐藏 input，以便接收键盘输入
+            if (ws?.readyState !== WebSocket.OPEN) return;
             const rect = view.getBoundingClientRect();
             const scaleX = contentWidth  ? contentWidth  / rect.width  : 1;
             const scaleY = contentHeight ? contentHeight / rect.height : 1;
             const x = Math.round((e.clientX - rect.left) * scaleX);
             const y = Math.round((e.clientY - rect.top)  * scaleY);
-
-            const clickEvent = (type) => JSON.stringify({
-                method: "Input.dispatchMouseEvent",
-                params: { type, x, y, button: 'left', clickCount: 1 }
-            });
-
-            ws.send(clickEvent("mousePressed"));
-            ws.send(clickEvent("mouseReleased"));
+            const ev = (type) => ({ method: "Input.dispatchMouseEvent", params: { type, x, y, button: 'left', clickCount: 1 } });
+            send(ev("mousePressed"));
+            send(ev("mouseReleased"));
         };
+
+        // --- 键盘输入 ---
+        // 需要特殊处理的功能键（直接发 dispatchKeyEvent）
+        const SPECIAL_KEYS = new Set([
+            'Enter','Backspace','Tab','Delete','Escape',
+            'ArrowLeft','ArrowRight','ArrowUp','ArrowDown',
+            'Home','End','PageUp','PageDown',
+            'F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12'
+        ]);
+
+        // IME 输入法：组合开始
+        keyInput.addEventListener('compositionstart', () => { isComposing = true; });
+
+        // IME 输入法：确认选词 → 用 insertText 注入最终文字（支持中/日/韩等所有 IME）
+        keyInput.addEventListener('compositionend', (e) => {
+            isComposing = false;
+            if (e.data) send({ method: 'Input.insertText', params: { text: e.data } });
+            keyInput.value = '';
+        });
+
+        // 普通可打印字符（非 IME）→ insertText
+        keyInput.addEventListener('input', (e) => {
+            if (isComposing || !e.data) return;
+            send({ method: 'Input.insertText', params: { text: e.data } });
+            keyInput.value = '';
+        });
+
+        // 功能键 & 快捷键（Ctrl/Alt/Meta 组合）→ dispatchKeyEvent
+        keyInput.addEventListener('keydown', (e) => {
+            if (isComposing) return;
+            const modifiers = (e.altKey ? 1 : 0) | (e.ctrlKey ? 2 : 0) | (e.metaKey ? 4 : 0) | (e.shiftKey ? 8 : 0);
+            const isShortcut = e.ctrlKey || e.altKey || e.metaKey;
+            if (!SPECIAL_KEYS.has(e.key) && !isShortcut) return;
+            e.preventDefault();
+            const base = { key: e.key, code: e.code, windowsVirtualKeyCode: e.keyCode, modifiers };
+            send({ method: 'Input.dispatchKeyEvent', params: { ...base, type: 'keyDown' } });
+            send({ method: 'Input.dispatchKeyEvent', params: { ...base, type: 'keyUp' } });
+        });
     </script>
 </body>
 </html>
