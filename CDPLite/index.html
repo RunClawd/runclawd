@@ -129,8 +129,12 @@
         view.onmousemove = (e) => {
             if (ws?.readyState !== WebSocket.OPEN) return;
             const { x, y } = getMousePos(e);
-            const button = isDragging ? (buttonMap[e.button] || 'none') : 'none';
-            // Note: During drag e.buttons has the mask of pressed buttons, otherwise 0
+            let button = 'none';
+            if (isDragging) {
+                if (e.buttons & 1) button = 'left';
+                else if (e.buttons & 2) button = 'right';
+                else if (e.buttons & 4) button = 'middle';
+            }
             send({ method: 'Input.dispatchMouseEvent', params: { type: 'mouseMoved', x, y, button, buttons: e.buttons || 0 } });
         };
 
@@ -181,7 +185,7 @@
         });
 
         keyInput.addEventListener('keydown', (e) => {
-            if (isComposing) return;
+            if (isComposing || e.keyCode === 229) return;
             // 阻止大部分按键的默认行为（除了 F12、F5 等必要的浏览器快捷键）
             if (e.key !== 'F12' && !(e.key === 'F5' || (e.ctrlKey && e.key === 'r'))) {
                 e.preventDefault();
