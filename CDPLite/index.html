@@ -23,6 +23,7 @@
         let ws;
         let contentWidth = 0, contentHeight = 0;
         let isComposing = false;
+        let cmdId = 10;
         const view   = document.getElementById('view');
         const status = document.getElementById('status');
 
@@ -38,7 +39,7 @@
         }
 
         function send(obj) {
-            if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify(obj));
+            if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ id: cmdId++, ...obj }));
         }
 
         (function initFromQuery() {
@@ -76,7 +77,7 @@
                     // 4. 图片渲染完成后再 Ack，避免帧堆积
                     view.onload = () => {
                         view.onload = null;
-                        send({ method: "Page.screencastFrameAck", params: { sessionId } });
+                        send({ method: 'Page.screencastFrameAck', params: { sessionId } });
                     };
                     view.src = "data:image/jpeg;base64," + data;
                 }
@@ -95,10 +96,27 @@
             const scaleY = contentHeight ? contentHeight / rect.height : 1;
             const x = Math.round((e.clientX - rect.left) * scaleX);
             const y = Math.round((e.clientY - rect.top)  * scaleY);
-            const ev = (type) => ({ method: "Input.dispatchMouseEvent", params: { type, x, y, button: 'left', clickCount: 1 } });
-            send(ev("mousePressed"));
-            send(ev("mouseReleased"));
+            const ev = (type, extra) => ({ method: 'Input.dispatchMouseEvent', params: { type, x, y, button: 'left', clickCount: 1, modifiers: 0, ...extra } });
+            send(ev('mousePressed', { buttons: 1 }));
+            send(ev('mouseReleased', { buttons: 0 }));
         };
+
+        // --- 鼠标滚轮 ---
+        view.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            if (ws?.readyState !== WebSocket.OPEN) return;
+            const rect = view.getBoundingClientRect();
+            const scaleX = contentWidth  ? contentWidth  / rect.width  : 1;
+            const scaleY = contentHeight ? contentHeight / rect.height : 1;
+            const x = Math.round((e.clientX - rect.left) * scaleX);
+            const y = Math.round((e.clientY - rect.top)  * scaleY);
+            send({ method: 'Input.dispatchMouseEvent', params: {
+                type: 'mouseWheel', x, y,
+                deltaX: e.deltaX * scaleX,
+                deltaY: e.deltaY * scaleY,
+                modifiers: 0,
+            }});
+        }, { passive: false });
 
         // --- 键盘输入 ---
         // 需要特殊处理的功能键（直接发 dispatchKeyEvent）
