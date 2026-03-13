@@ -169,6 +169,19 @@ ${AGENT_MODEL_JSON}
         "browser": {
           "enabled": true
         }
+      },
+      "memorySearch": {
+        "provider": "openai",
+        "model": "text-embedding-3-small",
+        "remote": {
+          "baseUrl": "${OPENAI_API_BASE_URL}",
+          "apiKey": "${OPENAI_API_KEY}"
+        }
+        "store": {
+          "vector": {
+            "enabled": true
+          }
+        }
       }
     },
     "list": [
