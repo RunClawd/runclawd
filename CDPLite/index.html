@@ -13,9 +13,12 @@
 </head>
 <body>
     <div class="controls">
-        <input type="text" id="wsUrl" placeholder="ws://localhost:3000/..." style="width: 400px;">
+        <input type="text" id="wsUrl" placeholder="ws://localhost:3000/..." style="width: 300px;">
         <button onclick="connect()">Cast Browser Window</button>
         <span id="status">disconnected</span>
+        <span style="margin: 0 10px; border-left: 1px solid #666; height: 20px;"></span>
+        <input type="text" id="navUrl" placeholder="https://..." style="width: 300px;" onkeydown="if(event.key === 'Enter') navigate()">
+        <button onclick="navigate()">Go</button>
     </div>
     <img id="view">
 
@@ -53,6 +56,16 @@
             }
         })();
 
+        function navigate() {
+            if (ws?.readyState !== WebSocket.OPEN) return;
+            let url = document.getElementById('navUrl').value.trim();
+            if (!url) return;
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url;
+            }
+            send({ method: "Page.navigate", params: { url } });
+        }
+
         function connect() {
             // 防止重复连接
             if (ws) { ws.onclose = null; ws.close(); }
@@ -87,18 +100,55 @@
             ws.onerror = () => setStatus('error');
         }
 
-        // --- 鼠标点击（坐标缩放） ---
-        view.onclick = (e) => {
-            keyInput.focus(); // 点击画面后把焦点交给隐藏 input，以便接收键盘输入
-            if (ws?.readyState !== WebSocket.OPEN) return;
+        // --- 鼠标操作（点击、移动、拖拽） ---
+        function getMousePos(e) {
             const rect = view.getBoundingClientRect();
             const scaleX = contentWidth  ? contentWidth  / rect.width  : 1;
             const scaleY = contentHeight ? contentHeight / rect.height : 1;
             const x = Math.round((e.clientX - rect.left) * scaleX);
             const y = Math.round((e.clientY - rect.top)  * scaleY);
-            const ev = (type, extra) => ({ method: 'Input.dispatchMouseEvent', params: { type, x, y, button: 'left', clickCount: 1, modifiers: 0, ...extra } });
-            send(ev('mousePressed', { buttons: 1 }));
-            send(ev('mouseReleased', { buttons: 0 }));
+            return { x, y };
+        }
+
+        const buttonMap = { 0: 'left', 1: 'middle', 2: 'right' };
+        const buttonsMap = { 0: 1, 1: 4, 2: 2 }; // e.button to Input.dispatchMouseEvent buttons mask
+
+        let isDragging = false;
+
+        view.onmousedown = (e) => {
+            e.preventDefault();
+            keyInput.focus();
+            if (ws?.readyState !== WebSocket.OPEN) return;
+            isDragging = true;
+            const { x, y } = getMousePos(e);
+            const button = buttonMap[e.button] || 'none';
+            const buttons = buttonsMap[e.button] || 0;
+            send({ method: 'Input.dispatchMouseEvent', params: { type: 'mousePressed', x, y, button, buttons, clickCount: 1 } });
+        };
+
+        view.onmousemove = (e) => {
+            if (ws?.readyState !== WebSocket.OPEN) return;
+            const { x, y } = getMousePos(e);
+            let button = 'none';
+            if (isDragging) {
+                if (e.buttons & 1) button = 'left';
+                else if (e.buttons & 2) button = 'right';
+                else if (e.buttons & 4) button = 'middle';
+            }
+            send({ method: 'Input.dispatchMouseEvent', params: { type: 'mouseMoved', x, y, button, buttons: e.buttons || 0 } });
+        };
+
+        view.onmouseup = (e) => {
+            e.preventDefault();
+            if (ws?.readyState !== WebSocket.OPEN) return;
+            isDragging = false;
+            const { x, y } = getMousePos(e);
+            const button = buttonMap[e.button] || 'none';
+            send({ method: 'Input.dispatchMouseEvent', params: { type: 'mouseReleased', x, y, button, buttons: 0, clickCount: 1 } });
+        };
+
+        view.oncontextmenu = (e) => {
+            e.preventDefault();
         };
 
         // --- 鼠标滚轮 ---
@@ -119,41 +169,57 @@
         }, { passive: false });
 
         // --- 键盘输入 ---
-        // 需要特殊处理的功能键（直接发 dispatchKeyEvent）
-        const SPECIAL_KEYS = new Set([
-            'Enter','Backspace','Tab','Delete','Escape',
-            'ArrowLeft','ArrowRight','ArrowUp','ArrowDown',
-            'Home','End','PageUp','PageDown',
-            'F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12'
-        ]);
-
         // IME 输入法：组合开始
         keyInput.addEventListener('compositionstart', () => { isComposing = true; });
 
-        // IME 输入法：确认选词 → 用 insertText 注入最终文字（支持中/日/韩等所有 IME）
+        // IME 输入法：确认选词 → 用 insertText 注入最终文字
         keyInput.addEventListener('compositionend', (e) => {
             isComposing = false;
             if (e.data) send({ method: 'Input.insertText', params: { text: e.data } });
             keyInput.value = '';
         });
 
-        // 普通可打印字符（非 IME）→ insertText
         keyInput.addEventListener('input', (e) => {
-            if (isComposing || !e.data) return;
-            send({ method: 'Input.insertText', params: { text: e.data } });
-            keyInput.value = '';
+            // 已在 keydown/keypress 中处理，清理 value
+            if (!isComposing) keyInput.value = '';
         });
 
-        // 功能键 & 快捷键（Ctrl/Alt/Meta 组合）→ dispatchKeyEvent
         keyInput.addEventListener('keydown', (e) => {
+            if (isComposing || e.keyCode === 229) return;
+            // 阻止大部分按键的默认行为（除了 F12、F5 等必要的浏览器快捷键）
+            if (e.key !== 'F12' && !(e.key === 'F5' || (e.ctrlKey && e.key === 'r'))) {
+                e.preventDefault();
+            }
+
+            const modifiers = (e.altKey ? 1 : 0) | (e.ctrlKey ? 2 : 0) | (e.metaKey ? 4 : 0) | (e.shiftKey ? 8 : 0);
+            const base = {
+                type: 'keyDown',
+                modifiers: modifiers,
+                windowsVirtualKeyCode: e.keyCode,
+                code: e.code,
+                key: e.key,
+                text: e.key.length === 1 ? e.key : '',
+                unmodifiedText: e.key.length === 1 ? e.key : '',
+                autoRepeat: e.repeat,
+                isKeypad: e.location === 3
+            };
+
+            // 对普通字符发 char（keyDown + char + keyUp 组合）
+            send({ method: 'Input.dispatchKeyEvent', params: base });
+        });
+
+        keyInput.addEventListener('keyup', (e) => {
             if (isComposing) return;
             const modifiers = (e.altKey ? 1 : 0) | (e.ctrlKey ? 2 : 0) | (e.metaKey ? 4 : 0) | (e.shiftKey ? 8 : 0);
-            const isShortcut = e.ctrlKey || e.altKey || e.metaKey;
-            if (!SPECIAL_KEYS.has(e.key) && !isShortcut) return;
-            e.preventDefault();
-            const base = { key: e.key, code: e.code, windowsVirtualKeyCode: e.keyCode, modifiers };
-            send({ method: 'Input.dispatchKeyEvent', params: { ...base, type: 'keyDown' } });
-            send({ method: 'Input.dispatchKeyEvent', params: { ...base, type: 'keyUp' } });
+            const base = {
+                type: 'keyUp',
+                modifiers: modifiers,
+                windowsVirtualKeyCode: e.keyCode,
+                code: e.code,
+                key: e.key,
+                isKeypad: e.location === 3
+            };
+            send({ method: 'Input.dispatchKeyEvent', params: base });
         });
     </script>
 </body>

@@ -152,6 +152,10 @@ RUN --mount=type=cache,id=npm-cache,target=/data/.npm,sharing=locked \
     else \
     OPENCLAW_SPEC="openclaw@${OPENCLAW_VERSION}"; \
     fi && \
+    if ! npm view "$OPENCLAW_SPEC" >/dev/null 2>&1; then \
+    echo "⚠️ Version $OPENCLAW_SPEC not found on npm, falling back to openclaw@latest"; \
+    OPENCLAW_SPEC="openclaw@latest"; \
+    fi && \
     npm install -g "$OPENCLAW_SPEC" && \
     if command -v openclaw >/dev/null 2>&1; then \
     echo "✅ openclaw binary found"; \
@@ -214,6 +218,10 @@ RUN --mount=type=cache,target=/data/.npm \
     OPENCLAW_SPEC="openclaw@beta"; \
     else \
     OPENCLAW_SPEC="openclaw@${OPENCLAW_VERSION}"; \
+    fi && \
+    if ! npm view "$OPENCLAW_SPEC" >/dev/null 2>&1; then \
+    echo "⚠️ Version $OPENCLAW_SPEC not found on npm, falling back to openclaw@latest"; \
+    OPENCLAW_SPEC="openclaw@latest"; \
     fi && \
     npm install -g "$OPENCLAW_SPEC" && \
     if command -v openclaw >/dev/null 2>&1; then \
