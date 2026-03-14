@@ -3,28 +3,47 @@
 <head>
     <title>Lite Screencast</title>
     <style>
-        body { margin: 0; background: #222; display: flex; flex-direction: column; align-items: center; }
-        #view { max-width: 100%; cursor: crosshair; border: 2px solid #444; }
-        .controls { color: white; padding: 10px; font-family: sans-serif; display: flex; align-items: center; gap: 8px; }
-        #status { font-size: 12px; color: #aaa; }
+        html, body { margin: 0; height: 100%; overflow: hidden; }
+        body { background: #222; display: flex; flex-direction: column; align-items: stretch; }
+        #view { flex: 1; width: 100%; min-height: 0; object-fit: contain; cursor: crosshair; display: block; }
+        .controls { color: white; padding: 6px 10px; font-family: sans-serif; display: flex; align-items: center; gap: 6px; }
+        .nav-btn { background: #333; border: 1px solid #555; color: #ccc; border-radius: 4px; width: 28px; height: 28px; cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; padding: 0; }
+        .nav-btn:hover { background: #444; color: #fff; }
+        .nav-btn:disabled { opacity: 0.35; cursor: default; }
+        #navUrl { flex: 1; }
+        #status { font-size: 12px; color: #aaa; margin-left: auto; white-space: nowrap; }
         #status.connected { color: #4c4; }
         #status.error { color: #f66; }
     </style>
 </head>
 <body>
     <div class="controls">
-        <input type="text" id="wsUrl" placeholder="ws://localhost:3000/..." style="width: 300px;">
-        <button onclick="connect()">Cast Browser Window</button>
-        <span id="status">disconnected</span>
-        <span style="margin: 0 10px; border-left: 1px solid #666; height: 20px;"></span>
-        <input type="text" id="navUrl" placeholder="https://..." style="width: 300px;" onkeydown="if(event.key === 'Enter') navigate()">
+        <button class="nav-btn" id="btnBack"    onclick="historyGo(-1)" title="Back">&#8592;</button>
+        <button class="nav-btn" id="btnForward" onclick="historyGo(1)"  title="Forward">&#8594;</button>
+        <button class="nav-btn" id="btnReload"  onclick="reload()"      title="Reload">&#8635;</button>
+        <input type="text" id="navUrl" placeholder="https://..." onkeydown="if(event.key === 'Enter') navigate()">
         <button onclick="navigate()">Go</button>
+        <span id="status">disconnected</span>
     </div>
     <img id="view">
 
     <script>
         let ws;
         let contentWidth = 0, contentHeight = 0;
+
+        function getViewSize() {
+            const rect = view.getBoundingClientRect();
+            return { width: Math.round(rect.width) || window.innerWidth,
+                     height: Math.round(rect.height) || window.innerHeight };
+        }
+
+        function setRemoteViewport() {
+            if (ws?.readyState !== WebSocket.OPEN) return;
+            const { width, height } = getViewSize();
+            send({ method: 'Emulation.setDeviceMetricsOverride', params: {
+                width, height, deviceScaleFactor: window.devicePixelRatio || 1, mobile: false
+            }});
+        }
         let isComposing = false;
         let cmdId = 10;
         const view   = document.getElementById('view');
@@ -45,16 +64,23 @@
             if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ id: cmdId++, ...obj }));
         }
 
+        let wsConnectUrl = '';
         (function initFromQuery() {
             const params = new URLSearchParams(location.search);
-            let url = '';
-            if (params.has('wss')) url = 'wss://' + params.get('wss');
-            else if (params.has('ws')) url = 'ws://' + params.get('ws');
-            if (url) {
-                document.getElementById('wsUrl').value = url;
-                connect();
-            }
+            if (params.has('wss')) wsConnectUrl = 'wss://' + params.get('wss');
+            else if (params.has('ws')) wsConnectUrl = 'ws://' + params.get('ws');
+            if (wsConnectUrl) connect();
         })();
+
+        function historyGo(delta) {
+            if (ws?.readyState !== WebSocket.OPEN) return;
+            send({ method: delta < 0 ? 'Page.goBack' : 'Page.goForward', params: {} });
+        }
+
+        function reload() {
+            if (ws?.readyState !== WebSocket.OPEN) return;
+            send({ method: 'Page.reload', params: {} });
+        }
 
         function navigate() {
             if (ws?.readyState !== WebSocket.OPEN) return;
@@ -69,7 +95,7 @@
         function connect() {
             // 防止重复连接
             if (ws) { ws.onclose = null; ws.close(); }
-            const url = document.getElementById('wsUrl').value;
+            const url = wsConnectUrl;
             setStatus('connecting…');
             ws = new WebSocket(url);
 
@@ -77,13 +103,33 @@
                 setStatus('connected');
                 // 1. 开启 Page 域
                 send({ id: 1, method: "Page.enable" });
-                // 2. 开始投屏
-                send({ id: 2, method: "Page.startScreencast", params: { format: "jpeg", quality: 60, maxWidth: 1280 } });
+                // 2. 将远端视口对齐到客户端窗口大小，再开始投屏
+                requestAnimationFrame(() => {
+                    const { width, height } = getViewSize();
+                    send({ method: 'Emulation.setDeviceMetricsOverride', params: {
+                        width, height, deviceScaleFactor: window.devicePixelRatio || 1, mobile: false
+                    }});
+                    send({ id: 2, method: "Page.startScreencast", params: { format: "jpeg", quality: 60, maxWidth: width, maxHeight: height } });
+                    send({ id: 3, method: "Page.getNavigationHistory" });
+                });
             };
 
             ws.onmessage = (msg) => {
                 const response = JSON.parse(msg.data);
                 // 3. 处理每一帧
+                if (response.id === 3 && response.result?.entries) {
+                    const entries = response.result.entries;
+                    const current = entries[response.result.currentIndex];
+                    if (current?.url && !current.url.startsWith('about:')) {
+                        document.getElementById('navUrl').value = current.url;
+                    }
+                }
+                if (response.method === "Page.frameNavigated") {
+                    const url = response.params?.frame?.url;
+                    if (url && !url.startsWith('about:')) {
+                        document.getElementById('navUrl').value = url;
+                    }
+                }
                 if (response.method === "Page.screencastFrame") {
                     const { data, metadata, sessionId } = response.params;
                     if (metadata) { contentWidth = metadata.deviceWidth; contentHeight = metadata.deviceHeight; }
@@ -146,6 +192,10 @@
             const button = buttonMap[e.button] || 'none';
             send({ method: 'Input.dispatchMouseEvent', params: { type: 'mouseReleased', x, y, button, buttons: 0, clickCount: 1 } });
         };
+
+        window.addEventListener('resize', () => {
+            setRemoteViewport();
+        });
 
         view.oncontextmenu = (e) => {
             e.preventDefault();
