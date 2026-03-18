@@ -224,8 +224,8 @@ fi
 # ----------------------------
 # Sandbox setup
 # ----------------------------
-[ -f scripts/sandbox-setup.sh ] && bash scripts/sandbox-setup.sh
-[ -f scripts/sandbox-browser-setup.sh ] && bash scripts/sandbox-browser-setup.sh
+[ -f scripts/sandbox-setup.sh ] && bash scripts/sandbox-setup.sh || echo "⚠️  Sandbox setup skipped (non-fatal)"
+[ -f scripts/sandbox-browser-setup.sh ] && bash scripts/sandbox-browser-setup.sh || echo "⚠️  Browser sandbox setup skipped (non-fatal)"
 
 # ----------------------------
 # Recovery & Monitoring

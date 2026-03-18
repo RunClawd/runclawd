@@ -1,6 +1,12 @@
 #!/bin/bash
 set -e
 
+# Require docker CLI
+if ! command -v docker >/dev/null 2>&1; then
+    echo "⚠️  Docker CLI not found — skipping sandbox base image setup"
+    exit 0
+fi
+
 # Inherit DOCKER_HOST if set, or default to socket proxy
 export DOCKER_HOST="${DOCKER_HOST:-tcp://docker-proxy:2375}"
 
