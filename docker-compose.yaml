@@ -57,7 +57,7 @@ services:
 
   browserless:
     hostname: runclawd-browserless
-    image: browserless/chrome:latest
+    image: ghcr.io/browserless/chrome:latest
     restart: unless-stopped
     user: "0:0"
     expose:
