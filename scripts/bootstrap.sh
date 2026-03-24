@@ -136,7 +136,7 @@ EOF
       "enabled": true,
       "allowInsecureAuth": true,
       "dangerouslyAllowHostHeaderOriginFallback": true,
-      "allowOrigin": "*"
+      "allowedOrigins": ["*"]
     },
     "trustedProxies": [
       "*"
