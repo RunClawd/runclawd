@@ -75,6 +75,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           flavor: |
             suffix=${{ matrix.suffix && format('-{0}', matrix.suffix) || '' }}
+            latest=false
           tags: |
             type=ref,event=branch
             type=ref,event=tag
